@@ -1,0 +1,372 @@
+[
+  {
+    "id": "base_camp",
+    "name": "Octavia E. Butler Landing",
+    "lat": 18.4447,
+    "lon": 77.4562,
+    "x": -180,
+    "y": 120,
+    "elevation": -2560,
+    "type": "Habitat / Base Camp",
+    "status": "Operational",
+    "commsLoS": true,
+    "description": "Flat, low-hazard landing site with optimal line-of-sight comms to MRO relay orbiter. Primary touchdown site of Perseverance on Sol 0 (Feb 18, 2021).",
+    "sampleTube": null,
+    "spectralSignature": "Pyroxene / Basaltic Regolith",
+    "thermalInertia": 320,
+    "hazardRating": "Low (2° slope, hard-packed bedrock)",
+    "instruments": ["MEDA", "Mastcam-Z", "MOXIE", "RIMFAX"],
+    "surfacePov": {
+      "camera": "Mastcam-Z 360° Panorama (Sol 3)",
+      "caption": "Flat volcanic pavement with twin retro-rocket thruster blast scours.",
+      "visualNotes": "Firm basaltic bedrock with sparse cobbles. Excellent traction for spacesuit boots and pressurized rover wheels."
+    },
+    "scienceData": {
+      "lithology": "Vesicular Basaltic Lava Flow",
+      "grainSize": "Fine to medium aphanitic (<0.5mm)",
+      "hardnessMohs": 6.2,
+      "densityGCm3": 2.95,
+      "spectrum": {
+        "instrument": "SuperCam (LIBS)",
+        "targetName": "Máaz Volcanic Pavement",
+        "peaks": [
+          { "label": "Si-I", "xVal": 288.1, "unit": "nm", "intensity": 94 },
+          { "label": "Fe-II", "xVal": 259.9, "unit": "nm", "intensity": 82 },
+          { "label": "Mg-II", "xVal": 279.5, "unit": "nm", "intensity": 88 },
+          { "label": "Ca-II", "xVal": 393.3, "unit": "nm", "intensity": 76 }
+        ],
+        "elementsDetected": ["Si", "Fe", "Mg", "Ca", "Ti"],
+        "mineralMatch": "Augite Pyroxene + Plagioclase Feldspar",
+        "confidenceScore": 96.4
+      }
+    }
+  },
+  {
+    "id": "target_1",
+    "name": "Kodiak Butte (Delta Deposit)",
+    "lat": 18.4100,
+    "lon": 77.3400,
+    "x": -340,
+    "y": -80,
+    "elevation": -2410,
+    "type": "Primary Science Target",
+    "status": "High Priority",
+    "commsLoS": true,
+    "description": "Exposed lakebed sedimentary layers with bottomset and foreset delta beds imaged remotely by Mastcam-Z. Conclusively proved Jezero once hosted a standing lake fed by an active river delta.",
+    "sampleTube": null,
+    "spectralSignature": "Fe/Mg Smectite Clays & Carbonates",
+    "thermalInertia": 260,
+    "hazardRating": "Moderate (14° slope at butte foot)",
+    "instruments": ["SuperCam RMI", "Mastcam-Z"],
+    "surfacePov": {
+      "camera": "Mastcam-Z 110mm Telephoto (Sol 30–145)",
+      "caption": "Prominent isolated mesa showing distinct dipping foreset delta beds.",
+      "visualNotes": "Steep talus scree apron (~14°) at butte foot; studied via remote telephoto optics without rover summit ascent."
+    },
+    "scienceData": {
+      "lithology": "Laminated Lacustrine Mudstone & Siltstone",
+      "grainSize": "Microcrystalline (<0.06mm)",
+      "hardnessMohs": 3.8,
+      "densityGCm3": 2.35,
+      "spectrum": {
+        "instrument": "SHERLOC (UV Raman)",
+        "targetName": "Kodiak Foreset Scarp",
+        "peaks": [
+          { "label": "Smectite OH-stretch", "xVal": 3620, "unit": "cm⁻¹", "intensity": 92 },
+          { "label": "Fe-smectite doublet", "xVal": 7050, "unit": "cm⁻¹", "intensity": 85 },
+          { "label": "Carbonate ν1", "xVal": 1086, "unit": "cm⁻¹", "intensity": 78 },
+          { "label": "Aromatic D-band", "xVal": 1350, "unit": "cm⁻¹", "intensity": 62 }
+        ],
+        "elementsDetected": ["Al", "Si", "Fe", "Mg", "Organic Aromatics"],
+        "mineralMatch": "Montmorillonite Clay + Siderite",
+        "confidenceScore": 94.8
+      }
+    }
+  },
+  {
+    "id": "target_2",
+    "name": "South Séítah Unit",
+    "lat": 18.4300,
+    "lon": 77.4300,
+    "x": -80,
+    "y": -120,
+    "elevation": -2590,
+    "type": "Geological Target",
+    "status": "Analyzed",
+    "commsLoS": true,
+    "description": "Ancient olivine-rich cumulate igneous rocks and aqueous carbonate deposits. Essential for dating Jezero's volcanic basement and earliest hydrological history.",
+    "sampleTube": {
+      "tubeId": "M2020-262-5",
+      "name": "Salette (Brac Outcrop)",
+      "rockType": "Olivine Cumulate Basalt",
+      "biosignatureRating": "Moderate (58%)",
+      "collectionSol": 262,
+      "coreLengthMm": 62
+    },
+    "spectralSignature": "Magnesian Olivine & Carbonate",
+    "thermalInertia": 390,
+    "hazardRating": "Moderate (Scabland fractures, 9° slope)",
+    "instruments": ["PIXL", "SHERLOC", "SuperCam", "RIMFAX"],
+    "surfacePov": {
+      "camera": "SuperCam RMI & Mastcam-Z (Sol 262)",
+      "caption": "Fractured olivine cumulate bedrock ('Brac' & 'Bastide' outcrop).",
+      "visualNotes": "Uneven polygonal slabs. High footwear friction, but watch for step-drop crevasses."
+    },
+    "scienceData": {
+      "lithology": "Coarse-Grained Olivine Cumulate",
+      "grainSize": "Medium to coarse phaneritic (1.0–3.0mm)",
+      "hardnessMohs": 6.8,
+      "densityGCm3": 3.15,
+      "spectrum": {
+        "instrument": "PIXL (Micro-XRF)",
+        "targetName": "Brac Abrasion Patch",
+        "peaks": [
+          { "label": "Si-Kα", "xVal": 1.74, "unit": "keV", "intensity": 90 },
+          { "label": "Mg-Kα", "xVal": 1.25, "unit": "keV", "intensity": 96 },
+          { "label": "Fe-Kα", "xVal": 6.40, "unit": "keV", "intensity": 84 },
+          { "label": "Ca-Kα", "xVal": 3.69, "unit": "keV", "intensity": 45 }
+        ],
+        "elementsDetected": ["Mg", "Fe", "Si", "Ni", "Cr"],
+        "mineralMatch": "Fo80 Forsteritic Olivine + Carbonate Cement",
+        "confidenceScore": 98.2
+      }
+    }
+  },
+  {
+    "id": "hazard_1",
+    "name": "Séítah Drift Fields",
+    "lat": 18.4250,
+    "lon": 77.4450,
+    "x": 20,
+    "y": -40,
+    "elevation": -2575,
+    "type": "Hazard Zone",
+    "status": "Restricted",
+    "commsLoS": true,
+    "description": "Deep, unconsolidated megaripples and loose sand dunes. High wheel sinkage risk (>80% slip) and slope instability. Vehicle traverse strictly restricted.",
+    "sampleTube": null,
+    "spectralSignature": "Aeolian Basaltic Dust",
+    "thermalInertia": 140,
+    "hazardRating": "Extreme Hazard (28° slip faces, sand trap)",
+    "instruments": ["MEDA", "Mastcam-Z"],
+    "surfacePov": {
+      "camera": "Hazcam & Navcam (Sol 175)",
+      "caption": "Unconsolidated active aeolian megaripples with fine dust crests.",
+      "visualNotes": "EXTREME HAZARD: Sand slip faces reach 28°. Direct foot traverse causes >80% sinkage. Strictly impassable."
+    },
+    "scienceData": {
+      "lithology": "Unconsolidated Basaltic Dune Sand",
+      "grainSize": "Fine sub-angular silt/sand (0.05–0.25mm)",
+      "hardnessMohs": 1.5,
+      "densityGCm3": 1.45,
+      "spectrum": {
+        "instrument": "SuperCam (LIBS)",
+        "targetName": "Séítah Ripple Crest",
+        "peaks": [
+          { "label": "Si-I", "xVal": 288.1, "unit": "nm", "intensity": 75 },
+          { "label": "Fe-I", "xVal": 404.5, "unit": "nm", "intensity": 91 },
+          { "label": "S-I", "xVal": 180.7, "unit": "nm", "intensity": 68 }
+        ],
+        "elementsDetected": ["Fe", "S", "Cl", "Si"],
+        "mineralMatch": "Nanophase Ferric Oxide (npOx) + Amorphous Basalt",
+        "confidenceScore": 89.1
+      }
+    }
+  },
+  {
+    "id": "target_3",
+    "name": "Three Forks Sample Depot",
+    "lat": 18.4380,
+    "lon": 77.4120,
+    "x": -120,
+    "y": 60,
+    "elevation": -2545,
+    "type": "Sample Cache Depot",
+    "status": "Active Cache",
+    "commsLoS": true,
+    "description": "Primary backup sample depot where NASA's Perseverance cached 10 titanium sample tubes on the Martian surface between Sol 653 and Sol 690 (including Montdenier, Coulettes & Bearwallow) for MSR recovery.",
+    "sampleTube": {
+      "tubeId": "M2020-516-15",
+      "name": "Bearwallow (Depot Tube #15)",
+      "rockType": "Sulfate-Bearing Delta Mudstone",
+      "biosignatureRating": "Critical (96%)",
+      "collectionSol": 516,
+      "coreLengthMm": 62
+    },
+    "spectralSignature": "Hydrated Silica, Sulfates & Smectite",
+    "thermalInertia": 310,
+    "hazardRating": "Low (Flat terrain, 3° slope)",
+    "instruments": ["SCS", "Mastcam-Z", "WATSON"],
+    "surfacePov": {
+      "camera": "WATSON & Mastcam-Z (Sol 653–690)",
+      "caption": "Gently undulating delta apron with 10 dropped titanium sample tubes.",
+      "visualNotes": "Optimal recovery corridor. Clean line-of-sight to each sample tube. Smooth consolidated surface."
+    },
+    "scienceData": {
+      "lithology": "Fine-Grained Deltaic Mudstone (Twin to Hazeltop)",
+      "grainSize": "Fine sub-micron clay particles (<0.02mm)",
+      "hardnessMohs": 3.4,
+      "densityGCm3": 2.30,
+      "spectrum": {
+        "instrument": "SHERLOC (UV Raman)",
+        "targetName": "Bearwallow Cache Target",
+        "peaks": [
+          { "label": "SiO2 hydrated band", "xVal": 3580, "unit": "cm⁻¹", "intensity": 96 },
+          { "label": "Polycyclic Aromatic", "xVal": 1600, "unit": "cm⁻¹", "intensity": 89 },
+          { "label": "Al-OH bend", "xVal": 915, "unit": "cm⁻¹", "intensity": 84 },
+          { "label": "Sulfate SO4", "xVal": 1008, "unit": "cm⁻¹", "intensity": 82 }
+        ],
+        "elementsDetected": ["Si", "Al", "Organic Carbon", "S"],
+        "mineralMatch": "Sulfate-Cemented Smectite Claystone",
+        "confidenceScore": 98.4
+      }
+    }
+  },
+  {
+    "id": "target_4",
+    "name": "Hawksbill Gap Delta Scarp",
+    "lat": 18.4280,
+    "lon": 77.3620,
+    "x": -260,
+    "y": 140,
+    "elevation": -2480,
+    "type": "Primary Science Target",
+    "status": "High Priority",
+    "commsLoS": false,
+    "description": "Steep delta front scarp of the Shenandoah Formation. Home to 'Wildcat Ridge', where SHERLOC deep-UV Raman detected abundant organic aromatics alongside sulfates.",
+    "sampleTube": {
+      "tubeId": "M2020-509-14",
+      "name": "Hazeltop (Wildcat Ridge)",
+      "rockType": "Sulfate-Cemented Claystone",
+      "biosignatureRating": "Very High (94%)",
+      "collectionSol": 509,
+      "coreLengthMm": 60
+    },
+    "spectralSignature": "Aqueous Sulfates & Organics",
+    "thermalInertia": 280,
+    "hazardRating": "High (18° delta slope front, switchback required)",
+    "instruments": ["SHERLOC", "PIXL", "SuperCam"],
+    "surfacePov": {
+      "camera": "Mastcam-Z (Sol 509)",
+      "caption": "Finely layered claystone outcrop at 'Wildcat Ridge' inside Hawksbill Gap.",
+      "visualNotes": "Switchback path required along natural alluvial ramp corridor. Rich organic signatures detected by SHERLOC."
+    },
+    "scienceData": {
+      "lithology": "Sulfate-Cemented Deltaic Claystone",
+      "grainSize": "Very fine silt (0.01–0.04mm)",
+      "hardnessMohs": 3.5,
+      "densityGCm3": 2.40,
+      "spectrum": {
+        "instrument": "SHERLOC (UV Raman)",
+        "targetName": "Wildcat Ridge Abrasion",
+        "peaks": [
+          { "label": "Ca-Sulfate (Gypsum)", "xVal": 1008, "unit": "cm⁻¹", "intensity": 95 },
+          { "label": "Aromatic G-band", "xVal": 1585, "unit": "cm⁻¹", "intensity": 91 },
+          { "label": "Aromatic D-band", "xVal": 1345, "unit": "cm⁻¹", "intensity": 82 },
+          { "label": "Fe-smectite", "xVal": 3550, "unit": "cm⁻¹", "intensity": 79 }
+        ],
+        "elementsDetected": ["Ca", "S", "C (Organic)", "Fe", "Si"],
+        "mineralMatch": "Bassanite + Nontronite Clay + Organic Matter",
+        "confidenceScore": 97.6
+      }
+    }
+  },
+  {
+    "id": "target_5",
+    "name": "Belva Crater Impact Rim",
+    "lat": 18.4720,
+    "lon": 77.3850,
+    "x": -160,
+    "y": 320,
+    "elevation": -2380,
+    "type": "Secondary Impact Ejecta",
+    "status": "Survey Site",
+    "commsLoS": true,
+    "description": "A ~0.9-km diameter impact crater atop the upper delta fan imaged in detail from Echo Creek (Sol 758). Exposed dipping stratigraphic beds and adjacent Emerald Lake conglomerate.",
+    "sampleTube": {
+      "tubeId": "M2020-822-20",
+      "name": "Otis Peak (Emerald Lake Fan)",
+      "rockType": "Fluvial Conglomerate",
+      "biosignatureRating": "Moderate (65%)",
+      "collectionSol": 822,
+      "coreLengthMm": 58
+    },
+    "spectralSignature": "Altered Mafic & Quartz Pebbles",
+    "thermalInertia": 420,
+    "hazardRating": "High (22° crater rim slope)",
+    "instruments": ["SuperCam", "Mastcam-Z", "RIMFAX"],
+    "surfacePov": {
+      "camera": "Mastcam-Z Echo Creek 152-image mosaic (Sol 758)",
+      "caption": "0.9-km impact crater rim exposing dipping deltaic strata and boulders.",
+      "visualNotes": "Crater rim crest provides 360° panoramic line-of-sight. Rim interior drops steeply at 22°."
+    },
+    "scienceData": {
+      "lithology": "Pebble Conglomerate & Impact Ejecta Strata",
+      "grainSize": "Angular to rounded heterolithic clasts (3–40mm)",
+      "hardnessMohs": 6.0,
+      "densityGCm3": 2.75,
+      "spectrum": {
+        "instrument": "SuperCam (LIBS)",
+        "targetName": "Belva / Echo Creek Outcrop",
+        "peaks": [
+          { "label": "Si-I", "xVal": 288.1, "unit": "nm", "intensity": 89 },
+          { "label": "Al-I", "xVal": 396.1, "unit": "nm", "intensity": 84 },
+          { "label": "Fe-II", "xVal": 275.5, "unit": "nm", "intensity": 79 },
+          { "label": "H-alpha", "xVal": 656.3, "unit": "nm", "intensity": 68 }
+        ],
+        "elementsDetected": ["Si", "Al", "Fe", "Mg", "H (Hydration)"],
+        "mineralMatch": "Silicate Pebbles + Phyllosilicate Matrix",
+        "confidenceScore": 93.4
+      }
+    }
+  },
+  {
+    "id": "target_6",
+    "name": "Neretva Vallis & Bright Angel",
+    "lat": 18.4900,
+    "lon": 77.3100,
+    "x": -380,
+    "y": 280,
+    "elevation": -2310,
+    "type": "Inflow Channel Breach",
+    "status": "Challenging",
+    "commsLoS": false,
+    "description": "Ancient paleoriver valley breaching Jezero's rim. Home to the 'Bright Angel' formation and arrowhead rock 'Cheyava Falls' showing potential microbial biosignature 'leopard spots'.",
+    "sampleTube": {
+      "tubeId": "M2020-1215-25",
+      "name": "Sapphire Canyon (Cheyava Falls)",
+      "rockType": "Hematite Mudstone w/ Ca-SO₄ Veins",
+      "biosignatureRating": "Critical (98%)",
+      "collectionSol": 1215,
+      "coreLengthMm": 61
+    },
+    "spectralSignature": "Organics, Fe-Phosphates & Sulfates",
+    "thermalInertia": 350,
+    "hazardRating": "Severe (26° cliff walls - requires valley floor route)",
+    "instruments": ["SuperCam", "PIXL", "SHERLOC", "WATSON"],
+    "surfacePov": {
+      "camera": "WATSON & Mastcam-Z (Sol 1215)",
+      "caption": "'Cheyava Falls' arrowhead rock inside Neretva Vallis featuring white calcium-sulfate veins and spotted mudstone.",
+      "visualNotes": "Channel floor is navigable (<10° ramp), but gorge walls are steep cliffs. Stay strictly in the central valley bed."
+    },
+    "scienceData": {
+      "lithology": "Ferruginous Mudstone with Calcium Sulfate Veins",
+      "grainSize": "Sub-micron mudstone with millimeter redox spots",
+      "hardnessMohs": 3.8,
+      "densityGCm3": 2.55,
+      "spectrum": {
+        "instrument": "PIXL (Micro-XRF)",
+        "targetName": "Cheyava Falls 'Leopard Spot'",
+        "peaks": [
+          { "label": "Fe-Kα", "xVal": 6.40, "unit": "keV", "intensity": 98 },
+          { "label": "P-Kα", "xVal": 2.01, "unit": "keV", "intensity": 86 },
+          { "label": "Ca-Kα", "xVal": 3.69, "unit": "keV", "intensity": 82 },
+          { "label": "S-Kα", "xVal": 2.31, "unit": "keV", "intensity": 79 }
+        ],
+        "elementsDetected": ["Fe", "P", "Ca", "S", "Organic Carbon"],
+        "mineralMatch": "Vivianite-like Fe-Phosphate + Gypsum Veins + Hematite",
+        "confidenceScore": 96.8
+      }
+    }
+  }
+]
