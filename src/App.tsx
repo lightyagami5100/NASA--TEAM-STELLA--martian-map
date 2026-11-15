@@ -24,6 +24,8 @@ import { HelmetVisorOverlay } from './components/hud/HelmetVisorOverlay';
 import { WeatherStationModal } from './components/hud/WeatherStationModal';
 import { LiveRoverFeedModal } from './components/hud/LiveRoverFeedModal';
 import { EvaTabletHud } from './components/hud/EvaTabletHud';
+import { MartianTimeScrubber } from './components/hud/MartianTimeScrubber';
+import { RoutingMathModal } from './components/modals/RoutingMathModal';
 import { tacticalAudio } from './utils/audio';
 
 export default function App() {
@@ -60,6 +62,27 @@ export default function App() {
   const [terrainSource, setTerrainSource] = useState<TerrainSource>('dem-plane');
   const [traverseMode, setTraverseMode] = useState<TraverseMode>('foot');
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDayPreset>('day');
+  // Continuous Martian Diurnal Sol Time Scrubber (0.0 to 24.66 hours LMST)
+  const [solTimeHour, setSolTimeHour] = useState<number>(14.65);
+
+  const handleSetSolTimeHour = useCallback((newHour: number) => {
+    setSolTimeHour(newHour);
+    if (newHour >= 17.5 && newHour <= 19.5) {
+      setTimeOfDay('sunset');
+    } else if (newHour > 19.5 || newHour < 5.5) {
+      setTimeOfDay('night');
+    } else {
+      setTimeOfDay('day');
+    }
+  }, []);
+
+  const handleSetTimeOfDay = useCallback((preset: TimeOfDayPreset) => {
+    setTimeOfDay(preset);
+    if (preset === 'day') setSolTimeHour(14.65);
+    else if (preset === 'sunset') setSolTimeHour(18.25);
+    else if (preset === 'night') setSolTimeHour(22.75);
+  }, []);
+
   const [isLiveFeedOpen, setIsLiveFeedOpen] = useState(false);
   const [roverTelemetry] = useState<LiveRoverFeedData>({
     sol: 1320,
@@ -91,6 +114,7 @@ export default function App() {
 
   // MEDA Atmospheric & Weather Hazard Modal
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
+  const [isRoutingMathOpen, setIsRoutingMathOpen] = useState(false);
 
   // Camera azimuth & tilt tracking for Google Earth navigation widgets
   const [cameraHeading, setCameraHeading] = useState({ theta: Math.PI * 0.25, phi: Math.PI * 0.32 });
@@ -221,29 +245,31 @@ export default function App() {
 
   return (
     <main className={`relative w-screen h-screen overflow-hidden bg-[var(--bg-canvas)] text-[var(--text-primary)] font-sans select-none ${isVisorFilter ? 'visor-hud-filter' : ''}`}>
-      {/* 1. Apple Liquid Glass Top Command Island */}
-      <MissionHeader
-        onOpenBrief={() => setIsBriefOpen(true)}
-        onOpenWeather={() => setIsWeatherOpen(true)}
-        onOpenLiveFeed={() => setIsLiveFeedOpen(true)}
-        timeOfDay={timeOfDay}
-        onChangeTimeOfDay={setTimeOfDay}
-        commsLoS={activePath?.path[Math.floor(simulationProgress * (activePath.path.length - 1))]?.commsLoS ?? true}
-        isVisorFilter={isVisorFilter}
-        onToggleVisorFilter={() => setIsVisorFilter(!isVisorFilter)}
-        dockSide={dockSide}
-        onToggleDockSide={() => setDockSide((prev) => (prev === 'left' ? 'right' : 'left'))}
-        isSidebarCollapsed={isSidebarCollapsed}
-        theme={theme}
-        onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-        waypoints={waypoints}
-        onSelectWaypoint={(wp) => setSelectedWaypoint(wp)}
-        startWp={startWp}
-        goalWp={goalWp}
-        activePath={activePath}
-        operationMode={operationMode}
-        onChangeOperationMode={handleSetOperationMode}
-      />
+      {/* 1. Apple Liquid Glass Top Command Island (Shown in Screen & Tablet modes) */}
+      {operationMode !== 'visor' && (
+        <MissionHeader
+          onOpenBrief={() => setIsBriefOpen(true)}
+          onOpenWeather={() => setIsWeatherOpen(true)}
+          onOpenLiveFeed={() => setIsLiveFeedOpen(true)}
+          timeOfDay={timeOfDay}
+          onChangeTimeOfDay={handleSetTimeOfDay}
+          commsLoS={activePath?.path[Math.floor(simulationProgress * (activePath.path.length - 1))]?.commsLoS ?? true}
+          isVisorFilter={isVisorFilter}
+          onToggleVisorFilter={() => setIsVisorFilter(!isVisorFilter)}
+          dockSide={dockSide}
+          onToggleDockSide={() => setDockSide((prev) => (prev === 'left' ? 'right' : 'left'))}
+          isSidebarCollapsed={isSidebarCollapsed}
+          theme={theme}
+          onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+          waypoints={waypoints}
+          onSelectWaypoint={(wp) => setSelectedWaypoint(wp)}
+          startWp={startWp}
+          goalWp={goalWp}
+          activePath={activePath}
+          operationMode={operationMode}
+          onChangeOperationMode={handleSetOperationMode}
+        />
+      )}
 
       {/* 2. 3D Martian Surface Canvas */}
       <MarsCanvas
@@ -256,7 +282,9 @@ export default function App() {
         onSetCameraMode={(mode) => setCameraMode(mode)}
         terrainSource={terrainSource}
         simulationProgress={simulationProgress}
+        traverseMode={traverseMode}
         timeOfDay={timeOfDay}
+        solTimeHour={solTimeHour}
         onTerrainClick={handleTerrainClick}
         onCameraHeadingChange={(theta, phi) => setCameraHeading({ theta, phi })}
         navAction={navAction}
@@ -298,6 +326,7 @@ export default function App() {
           onToggleDockSide={() => setDockSide((prev) => (prev === 'left' ? 'right' : 'left'))}
           onSwitchToVisor={() => handleSetOperationMode('visor')}
           onSwitchToScreen={() => handleSetOperationMode('screen')}
+          onOpenRoutingMath={() => setIsRoutingMathOpen(true)}
         />
       )}
 
@@ -356,6 +385,7 @@ export default function App() {
             onOpenLiveFeed={() => setIsLiveFeedOpen(true)}
             isCollapsed={isSidebarCollapsed}
             onSetCollapsed={setIsSidebarCollapsed}
+            onOpenRoutingMath={() => setIsRoutingMathOpen(true)}
           />
 
           <WaypointInspector
@@ -412,6 +442,21 @@ export default function App() {
         isOpen={isLiveFeedOpen}
         onClose={() => setIsLiveFeedOpen(false)}
         telemetry={roverTelemetry}
+      />
+
+      {/* 11. Kinematic A* Routing Engine & Mathematical Optimality Proof Modal */}
+      <RoutingMathModal
+        isOpen={isRoutingMathOpen}
+        onClose={() => setIsRoutingMathOpen(false)}
+        activePath={activePath}
+      />
+
+      {/* 12. Diurnal Martian Solar Ephemeris & Shadow Timeline Scrubber */}
+      <MartianTimeScrubber
+        solTimeHour={solTimeHour}
+        onChangeSolTimeHour={handleSetSolTimeHour}
+        dockSide={dockSide}
+        hasActiveModal={isBriefOpen || isWeatherOpen || isLiveFeedOpen || isRoutingMathOpen}
       />
     </main>
   );

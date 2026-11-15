@@ -42,6 +42,7 @@ interface EvaTabletHudProps {
   onToggleDockSide: () => void;
   onSwitchToVisor: () => void;
   onSwitchToScreen: () => void;
+  onOpenRoutingMath?: () => void;
 }
 
 export const EvaTabletHud: React.FC<EvaTabletHudProps> = ({
@@ -59,6 +60,7 @@ export const EvaTabletHud: React.FC<EvaTabletHudProps> = ({
   onToggleDockSide,
   onSwitchToVisor,
   onSwitchToScreen,
+  onOpenRoutingMath,
 }) => {
   // Tablet Ergonomic States
   const [isGloveMode, setIsGloveMode] = useState(true);
@@ -371,6 +373,24 @@ export const EvaTabletHud: React.FC<EvaTabletHudProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Mathematical Proof & Accuracy Inspector Pill */}
+                  {onOpenRoutingMath && (
+                    <button
+                      onClick={() => {
+                        tacticalAudio.playBlip();
+                        onOpenRoutingMath();
+                      }}
+                      className="mt-3 w-full py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-mono text-xs flex items-center justify-between transition cursor-pointer"
+                      title="Inspect A* Mathematical Optimality Proof & NASA Accuracy Benchmarks"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span className="font-bold text-[11px] truncate">A* Optimality Proof &amp; Benchmarks</span>
+                      </div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Proof &gt;</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Primary Action Button: Traverse Simulation & Autonav */}

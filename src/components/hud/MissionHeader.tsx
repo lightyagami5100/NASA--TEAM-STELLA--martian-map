@@ -18,6 +18,7 @@ import {
   X,
   Monitor,
   Tablet,
+  Sliders,
 } from 'lucide-react';
 import { tacticalAudio } from '../../utils/audio';
 
@@ -116,7 +117,7 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
   // Position top island cleanly BESIDE the expanded sidebar (Flux layout) so panels never collide
   let horizontalBounds = 'left-4 right-4';
   let subPillAlign = 'left-4';
-  if (!isSidebarCollapsed) {
+  if (operationMode === 'screen' && !isSidebarCollapsed) {
     if (dockSide === 'left') {
       horizontalBounds = 'left-4 lg:left-[418px] xl:left-[448px] 2xl:left-[472px] right-4';
       subPillAlign = 'left-4 lg:left-[418px] xl:left-[448px] 2xl:left-[472px]';
@@ -331,7 +332,7 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
             </div>
           )}
 
-          {/* Visor HUD Filter Pill */}
+          {/* Polarized Optical Filter Toggle */}
           {onToggleVisorFilter && (
             <button
               onClick={() => {
@@ -343,12 +344,12 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   ? 'apple-btn-primary text-white border-transparent'
                   : 'glass-card text-[var(--text-primary)]'
               }`}
-              title="Toggle Polarized Helmet Visor Filter"
-              aria-label="Toggle Polarized Helmet Visor Scanlines"
+              title="Toggle Polarized Helmet Visor Scanlines & Glare Filter"
+              aria-label="Toggle Polarized Filter"
               aria-pressed={isVisorFilter}
             >
-              <Eye className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden 2xl:inline">{isVisorFilter ? 'Visor On' : 'Visor'}</span>
+              <Sliders className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden 2xl:inline">{isVisorFilter ? 'Filter On' : 'Filter'}</span>
             </button>
           )}
 
@@ -482,8 +483,8 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
         </div>
       </header>
 
-      {/* Active Route Monitoring Floating Capsule (Mirrors Flux active-monitor-hud) */}
-      {showRoutePill && activePath && startWp && goalWp && (
+      {/* Active Route Monitoring Floating Capsule (Mirrors Flux active-monitor-hud, screen mode only) */}
+      {operationMode === 'screen' && isSidebarCollapsed && showRoutePill && activePath && startWp && goalWp && (
         <div
           className={`hidden md:flex fixed top-[88px] ${subPillAlign} z-20 glass-panel-elevated rounded-full px-4 py-2 items-center gap-3 pointer-events-auto transition-all duration-300 ease-out max-w-[440px]`}
         >

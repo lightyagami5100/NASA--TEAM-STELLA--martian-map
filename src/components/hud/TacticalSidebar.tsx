@@ -27,7 +27,8 @@ import {
   PanelLeftClose,
   PanelRightClose,
   PieChart,
-  Radio
+  Radio,
+  ArrowRight,
 } from 'lucide-react';
 import { ElevationProfileChart } from './ElevationProfileChart';
 import { tacticalAudio } from '../../utils/audio';
@@ -66,6 +67,7 @@ interface TacticalSidebarProps {
   onOpenLiveFeed?: () => void;
   isCollapsed?: boolean;
   onSetCollapsed?: (collapsed: boolean) => void;
+  onOpenRoutingMath?: () => void;
 }
 
 export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
@@ -98,6 +100,7 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
   onOpenLiveFeed,
   isCollapsed: controlledCollapsed,
   onSetCollapsed,
+  onOpenRoutingMath,
 }) => {
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const isCollapsed = controlledCollapsed ?? internalCollapsed;
@@ -455,9 +458,18 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
         </div>
       )}
 
-      {/* Big Route Viability & Safety Ring Card (Mirrors Flux Health Index Dial) */}
+      {/* Big Route Viability & Safety Ring Card (Interactive: Opens Mathematical Optimality Proof) */}
       {activePath && (
-        <div className="glass-card p-4 flex items-center justify-between gap-4">
+        <div
+          onClick={() => {
+            tacticalAudio.playBlip();
+            onOpenRoutingMath?.();
+          }}
+          className="glass-card p-4 flex items-center justify-between gap-4 cursor-pointer hover:border-[var(--primary)] transition group"
+          title="Click to inspect A* optimality proof, kinematic cost functions, and NASA accuracy benchmarks"
+          role="button"
+          tabIndex={0}
+        >
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               {activePath.isViable ? (
@@ -465,17 +477,21 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
               ) : (
                 <ShieldAlert className="w-5 h-5 shrink-0" style={{ color: 'var(--danger)' }} />
               )}
-              <h3 className="text-[15px] font-extrabold text-[var(--text-primary)]">
+              <h3 className="text-[15px] font-extrabold text-[var(--text-primary)] group-hover:text-[var(--primary)] transition">
                 {activePath.isViable ? 'Kinematically Viable Route' : 'Steep Scree Hazard'}
               </h3>
             </div>
             <p className="text-xs text-[var(--text-secondary)] font-body mt-1 leading-snug">
               Composite HiRISE slope, THEMIS sand &amp; PLSS oxygen margin score
             </p>
+            <div className="flex items-center gap-1.5 mt-2 text-[11px] font-bold text-[var(--primary)]">
+              <span>Inspect Math &amp; Accuracy Proof</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
+            </div>
           </div>
 
           <div
-            className="w-15 h-15 rounded-full flex items-center justify-center shrink-0 font-display text-xl font-extrabold border-[2.5px]"
+            className="w-15 h-15 rounded-full flex items-center justify-center shrink-0 font-display text-xl font-extrabold border-[2.5px] group-hover:scale-105 transition"
             style={{
               background: activePath.isViable ? 'var(--primary-bg)' : 'var(--danger-bg)',
               borderColor: activePath.isViable ? 'var(--primary)' : 'var(--danger)',

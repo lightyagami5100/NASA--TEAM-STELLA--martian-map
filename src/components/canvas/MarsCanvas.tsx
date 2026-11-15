@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import type { Waypoint, PathResult, CameraMode, LayerSettings, ActiveLayers, TerrainSource, TimeOfDayPreset } from '../../types/mars';
+import type { Waypoint, PathResult, CameraMode, LayerSettings, ActiveLayers, TerrainSource, TimeOfDayPreset, TraverseMode } from '../../types/mars';
 import { getJezeroElevation } from '../../data/jezeroDemData';
 import { generateBaseOpticalTexture } from './textureGenerator';
 import { tacticalAudio } from '../../utils/audio';
@@ -31,6 +31,7 @@ interface MarsCanvasProps {
   onSetCameraMode?: (mode: CameraMode) => void;
   terrainSource: TerrainSource;
   simulationProgress: number;
+  traverseMode?: TraverseMode;
   timeOfDay?: TimeOfDayPreset;
   solTimeHour?: number;
   lmstClock?: string;
@@ -773,6 +774,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   onSetCameraMode,
   terrainSource,
   simulationProgress,
+  traverseMode = 'foot',
   timeOfDay = 'day',
   solTimeHour,
   onTerrainClick,
@@ -793,6 +795,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   const roverGroupRef = useRef<THREE.Group | null>(null);
   const ev1GroupRef = useRef<THREE.Group | null>(null);
   const ev2GroupRef = useRef<THREE.Group | null>(null);
+  const simProgressRef = useRef(simulationProgress);
+  simProgressRef.current = simulationProgress;
   const walkbackRingRef = useRef<THREE.Mesh | null>(null);
   const markersGroupRef = useRef<THREE.Group | null>(null);
   const globeGroupRef = useRef<THREE.Group | null>(null);
@@ -1150,6 +1154,38 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
           ring.scale.set(s, s, s);
         }
       }
+
+      // Dynamic Astronaut Walking Gait Cycle (EV-1 Commander and EV-2 Geologist)
+      // When crew is moving along traverse line during simulation or playback:
+      const isCrewWalking = simProgressRef.current > 0.005 && simProgressRef.current < 0.995;
+      const walkRate = 7.2;
+      const walkPhase = elapsed * walkRate;
+
+      [ev1GroupRef.current, ev2GroupRef.current].forEach((crewGroup, idx) => {
+        if (!crewGroup) return;
+        const phaseOffset = idx * Math.PI * 0.45; // Natural out-of-phase step between EV-1 and EV-2
+        const p = walkPhase + phaseOffset;
+
+        const hipL = crewGroup.getObjectByName('hipL');
+        const hipR = crewGroup.getObjectByName('hipR');
+        const shoulderL = crewGroup.getObjectByName('shoulderL');
+        const shoulderR = crewGroup.getObjectByName('shoulderR');
+
+        if (hipL && hipR && shoulderL && shoulderR) {
+          if (isCrewWalking) {
+            hipL.rotation.x = Math.sin(p) * 0.55;
+            hipR.rotation.x = -Math.sin(p) * 0.55;
+            shoulderL.rotation.x = -Math.sin(p) * 0.42;
+            shoulderR.rotation.x = Math.sin(p) * 0.42;
+          } else {
+            // Smoothly return to alert standing stance
+            hipL.rotation.x *= 0.88;
+            hipR.rotation.x *= 0.88;
+            shoulderL.rotation.x *= 0.88;
+            shoulderR.rotation.x *= 0.88;
+          }
+        }
+      });
 
       // Dust Devils vortex swirl & trajectory drift across crater floor
       if (dustDevilsGroupRef.current && dustDevilsGroupRef.current.visible) {
@@ -1534,8 +1570,6 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     const posZ = THREE.MathUtils.lerp(-n0.y, -n1.y, fraction);
     const posY = getGroundElevationAt(posX, posZ);
 
-    ev1.position.set(posX, posY, posZ);
-
     // EV-2 Geologist follows 14 meters behind on the traverse line
     const lagFraction = Math.max(0, exactIndex - 2.5) / Math.max(1, totalNodes - 1);
     const lagIdx0 = Math.floor(lagFraction * (totalNodes - 1));
@@ -1545,13 +1579,21 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     const ev2X = THREE.MathUtils.lerp(ev2N0.x, ev2N1.x, 0.5) - 3.5;
     const ev2Z = THREE.MathUtils.lerp(-ev2N0.y, -ev2N1.y, 0.5);
     const ev2Y = getGroundElevationAt(ev2X, ev2Z);
-    ev2.position.set(ev2X, ev2Y, ev2Z);
 
-    // Support Rover follows or accompanies crew
-    const roverX = posX + 12.0;
-    const roverZ = posZ - 6.0;
-    const roverY = getGroundElevationAt(roverX, roverZ);
-    rover.position.set(roverX, roverY, roverZ);
+    if (traverseMode === 'foot') {
+      // Suited human Marswalk EVA: Commander & Geologist active on foot
+      ev1.position.set(posX, posY, posZ);
+      ev2.position.set(ev2X, ev2Y, ev2Z);
+      ev1.visible = true;
+      ev2.visible = true;
+      rover.visible = false;
+    } else {
+      // Pressurized Support Rover: driving along traverse centerline
+      rover.position.set(posX, posY, posZ);
+      rover.visible = true;
+      ev1.visible = false;
+      ev2.visible = false;
+    }
 
     // Orient heading along traverse
     const nextIdx = Math.min(totalNodes - 1, idx0 + 1);
@@ -1589,7 +1631,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       cam.position.y = posY + 22;
       cam.lookAt(posX, posY + 4, posZ);
     }
-  }, [simulationProgress, activePath, cameraMode, terrainSource, objStatus, stlStatus]);
+  }, [simulationProgress, activePath, cameraMode, traverseMode, terrainSource, objStatus, stlStatus]);
 
   // 5. Camera Modes & Globe vs Surface transitions
   useEffect(() => {

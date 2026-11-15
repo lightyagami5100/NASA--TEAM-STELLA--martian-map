@@ -161,8 +161,9 @@ export function findOptimalMarsPath(
 
       const maxStepSlope = Math.max(nextTerrain.slopeDeg, edgeSlopeDeg, midTerrain.slopeDeg);
 
-      // CONSTRAINT RULE 1: Slopes > 20.0° are strictly impassable rollover hazards
-      if (maxStepSlope > 20.0) {
+      // CONSTRAINT RULE 1: Impassable slope safety limit (15.0° for foot EVA, 20.0° for rover)
+      const impassableSlopeThreshold = mode === 'foot' ? 15.0 : 20.0;
+      if (maxStepSlope > impassableSlopeThreshold) {
         continue;
       }
 
