@@ -1,8 +1,24 @@
-node_modules
-dist
-dist-ssr
+# Dependencies & Build Output
+node_modules/
+dist/
+dist-ssr/
 *.local
-.vscode
+*.tsbuildinfo
+.eslintcache
+.cache/
+
+# Environment & Credentials
+.env*
+!.env.example
+
+# IDE & OS Artifacts
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Heavy 3D Assets (>50MB Git LFS / Local CDN)
 trekOBJ/model.obj
 public/trek/model.obj
+
