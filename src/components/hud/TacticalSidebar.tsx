@@ -214,12 +214,13 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
       {/* Main Apple Liquid Glass Command Panel (Flux Sidebar Proportions) */}
       <aside
         aria-label="EVA Command Dashboard"
-        className={`fixed top-4 ${positionClass} bottom-4 z-20 w-[440px] max-w-[calc(100vw-2rem)] glass-panel flex flex-col overflow-hidden transition-all duration-300 ease-out select-none pointer-events-auto font-sans ${className = {`fixed top-4 ${positionClass} bottom-4 z-20 w-[390px] xl:w-[420px] 2xl:w-[440px] max-w-[calc(100vw-2rem)] glass-panel flex flex-col overflow-hidden transition-all duration-300 ease-out select-none pointer-events-auto font-sans ${isCollapsed
-              ? dockSide === 'left'
-                ? '-translate-x-[calc(100%+2rem)] pointer-events-none'
-                : 'translate-x-[calc(100%+2rem)] pointer-events-none'
-              : 'translate-x-0'
-            }`}
+        className={`fixed top-4 ${positionClass} bottom-4 z-20 w-[390px] xl:w-[420px] 2xl:w-[440px] max-w-[calc(100vw-2rem)] glass-panel flex flex-col overflow-hidden transition-all duration-300 ease-out select-none pointer-events-auto font-sans ${
+          isCollapsed
+            ? dockSide === 'left'
+              ? '-translate-x-[calc(100%+2rem)] pointer-events-none'
+              : 'translate-x-[calc(100%+2rem)] pointer-events-none'
+            : 'translate-x-0'
+        }`}
       >
         {/* 1. Pinned Brand Header */}
         <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between shrink-0">

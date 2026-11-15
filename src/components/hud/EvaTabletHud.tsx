@@ -218,7 +218,7 @@ export const EvaTabletHud: React.FC<EvaTabletHudProps> = ({
                   : 'bg-slate-800/80 text-slate-400 border-slate-700/80'
               }`}
             >
-              <span>🧤</span>
+              <Sliders className="w-4 h-4" />
               <span className="hidden sm:inline">{isGloveMode ? 'Glove 48px' : 'Standard'}</span>
             </button>
 
