@@ -149,132 +149,125 @@ export const EvaTabletHud: React.FC<EvaTabletHudProps> = ({
     setIsSampleDrawerOpen(false);
   };
 
+  const positionClass = dockSide === 'left' ? 'left-4 sm:left-6' : 'right-4 sm:right-6';
+
   return (
     <div
       data-theme="dark"
-      className={`absolute inset-0 z-20 pointer-events-none flex flex-col justify-between p-4 sm:p-6 select-none font-sans transition-all duration-300 ${
+      className={`fixed inset-0 z-20 pointer-events-none select-none font-sans transition-all duration-300 ${
         isHighGlareMode ? 'filter contrast-150 brightness-110 saturate-150' : ''
       }`}
     >
-      {/* 1. Tactical Tablet Top Quick-Bar */}
-      <header className="pointer-events-auto flex items-center justify-between gap-3 w-full max-w-5xl mx-auto hud-panel p-2.5 sm:p-3.5 rounded-2xl border border-amber-500/40 shadow-2xl backdrop-blur-2xl bg-slate-950/85">
-        {/* Left: EVA Identification & Mode Banner */}
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/30 to-amber-600/10 border border-amber-400/60 flex items-center justify-center text-amber-400 shadow-md shadow-amber-500/20">
-            <Navigation2 className="w-6 h-6 rotate-45" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold tracking-wider uppercase text-amber-400 font-mono">
-                EVA Slate · EV-1 Lead
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                Glove Rdy
-              </span>
+      {/* Tactical Field Slate Surface (Docked Below Header, Left or Right Handed) */}
+      <main
+        className={`pointer-events-auto fixed top-24 bottom-6 ${positionClass} w-[420px] lg:w-[460px] max-w-[calc(100vw-2rem)] flex flex-col hud-panel rounded-3xl border-2 border-amber-500/50 shadow-2xl bg-slate-950/92 backdrop-blur-2xl overflow-hidden transition-all duration-300`}
+      >
+        {/* Pinned Tablet Title & Quick Controls Bar */}
+        <div className="p-3.5 sm:p-4 border-b border-slate-800/80 bg-slate-900/80 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-amber-600/10 border border-amber-400/60 flex items-center justify-center text-amber-400 shadow-md shadow-amber-500/20">
+              <Navigation2 className="w-5 h-5 rotate-45" />
             </div>
-            <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2">
-              <span>SOL 1320</span>
-              <span>·</span>
-              <span className="text-slate-200 font-semibold">LMST 14:46:12</span>
-              <span>·</span>
-              <span className="text-sky-300 font-mono">Three Forks Sector</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold tracking-wider uppercase text-amber-400 font-mono">
+                  EVA Slate · EV-1
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                  Glove Rdy
+                </span>
+              </div>
+              <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+                <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${isWalkbackCritical ? 'text-rose-400' : 'text-amber-400'}`} />
+                <span>Margin:</span>
+                <span className={`font-bold ${isWalkbackCritical ? 'text-rose-400 animate-pulse' : 'text-amber-300'}`}>
+                  +{walkbackSafetyMarginMinutes}m O₂
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Center: Walkback Point of No Return Countdown Indicator */}
-        <div
-          className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border font-mono transition-all ${
-            isWalkbackCritical
-              ? 'bg-rose-950/60 border-rose-500 text-rose-300 animate-pulse'
-              : 'bg-slate-900/80 border-slate-700/80 text-slate-200'
-          }`}
-        >
-          <AlertTriangle
-            className={`w-5 h-5 ${isWalkbackCritical ? 'text-rose-400' : 'text-amber-400'}`}
-          />
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-              Walkback Margin
-            </div>
-            <div className="text-xs sm:text-sm font-bold tabular-nums">
-              +{walkbackSafetyMarginMinutes}m (O₂ Buffer)
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Mode Switchers & Ergonomics */}
-        <div className="flex items-center gap-2">
-            {/* Glove Mode Ergonomic Toggle */}
+          {/* Quick Ergonomic Controls */}
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => {
                 tacticalAudio.playBlip();
                 setIsGloveMode(!isGloveMode);
               }}
-              title="Toggle NASA Pressurized Glove Touch Mode (>=48px touch targets)"
-              className={`px-3 h-11 rounded-xl flex items-center gap-1.5 border font-mono text-xs font-bold transition-all ${
+              title="Toggle NASA Pressurized Glove Touch Mode"
+              aria-label="Toggle glove mode"
+              className={`px-2.5 h-9 rounded-xl flex items-center gap-1 border font-mono text-xs font-bold transition-all cursor-pointer ${
                 isGloveMode
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-400/80 shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-400/80 shadow-xs'
                   : 'bg-slate-800/80 text-slate-400 border-slate-700/80'
               }`}
             >
-              <Sliders className="w-4 h-4" />
-              <span className="hidden sm:inline">{isGloveMode ? 'Glove 48px' : 'Standard'}</span>
+              <Sliders className="w-3.5 h-3.5" />
+              <span className="text-[11px]">{isGloveMode ? '48px' : 'Std'}</span>
             </button>
 
-            {/* High-Glare Contrast Toggle */}
             <button
               onClick={() => {
                 tacticalAudio.playBlip();
                 setIsHighGlareMode(!isHighGlareMode);
               }}
               title="Toggle Solar Glare High-Contrast Mode"
-              className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all ${
+              aria-label="Toggle high contrast solar glare mode"
+              className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
                 isHighGlareMode
-                  ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-lg shadow-amber-500/30'
-                  : 'bg-slate-800/80 text-amber-300 border-slate-700/80 hover:bg-slate-700/80'
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-md shadow-amber-500/30'
+                  : 'bg-slate-800/80 text-amber-300 border-slate-700/80 hover:bg-slate-700'
               }`}
             >
-              <Sun className="w-5 h-5" />
+              <Sun className="w-4 h-4" />
             </button>
 
-          {/* Quick Switch to Visor AR View */}
-          <button
-            onClick={() => {
-              tacticalAudio.playBlip();
-              onSwitchToVisor();
-            }}
-            title="Switch to Helmet Visor HUD View"
-            className="px-3 h-11 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-300 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md active:scale-95"
-          >
-            <Maximize2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Visor HUD</span>
-          </button>
+            {onSwitchToVisor && (
+              <button
+                onClick={() => {
+                  tacticalAudio.playBlip();
+                  onSwitchToVisor();
+                }}
+                title="Switch to Helmet Visor HUD View [Key: 3]"
+                aria-label="Switch to helmet visor HUD"
+                className="w-9 h-9 rounded-xl flex items-center justify-center border border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 cursor-pointer transition"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            )}
 
-          {/* Return to Desktop/Workstation Screen Mode */}
-          <button
-            onClick={() => {
-              tacticalAudio.playBlip();
-              onSwitchToScreen();
-            }}
-            title="Switch to Mission Control / Workstation Console"
-            className="px-3 h-11 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600/60 text-slate-200 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95"
-          >
-            <span>Exit Tablet</span>
-          </button>
+            {onSwitchToScreen && (
+              <button
+                onClick={() => {
+                  tacticalAudio.playBlip();
+                  onSwitchToScreen();
+                }}
+                title="Return to Habitat Workstation Console [Key: 1]"
+                aria-label="Return to habitat console"
+                className="px-2.5 h-9 rounded-xl flex items-center gap-1 border border-slate-700/80 bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition text-xs font-bold"
+              >
+                <span>Console</span>
+              </button>
+            )}
+
+            {onToggleDockSide && (
+              <button
+                onClick={() => {
+                  tacticalAudio.playBlip();
+                  onToggleDockSide();
+                }}
+                title={dockSide === 'left' ? 'Dock to Right Rail (Left-Handed)' : 'Dock to Left Rail'}
+                aria-label="Switch tablet docking side"
+                className="w-9 h-9 rounded-xl flex items-center justify-center border border-slate-700/80 bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition"
+              >
+                <Sliders className="w-4 h-4 rotate-90" />
+              </button>
+            )}
+          </div>
         </div>
-      </header>
 
-      {/* 2. Main Tactical Field Slate Surface (Docked Left or Right) */}
-      <div
-        className={`pointer-events-auto flex items-end gap-4 w-full max-w-6xl mx-auto my-auto ${
-          dockSide === 'right' ? 'flex-row-reverse' : 'flex-row'
-        }`}
-      >
-        {/* Main Tablet Surface Module */}
-        <main className="w-full sm:w-[480px] lg:w-[520px] max-h-[76vh] flex flex-col hud-panel rounded-3xl border-2 border-amber-500/50 shadow-2xl bg-slate-950/90 backdrop-blur-2xl overflow-hidden">
-          {/* Tablet Tab Bar (Glove-Friendly Touch Targets >= 48px) */}
-          <nav className="grid grid-cols-4 border-b border-slate-800/80 bg-slate-900/60 p-1.5 gap-1.5">
+        {/* Tablet Tab Bar (Glove-Friendly Touch Targets >= 48px) */}
+        <nav className="grid grid-cols-4 border-b border-slate-800/80 bg-slate-900/60 p-1.5 gap-1.5 shrink-0">
             <button
               onClick={() => {
                 tacticalAudio.playBlip();
@@ -700,21 +693,6 @@ export const EvaTabletHud: React.FC<EvaTabletHudProps> = ({
             )}
           </div>
         </main>
-
-        {/* Tactical Forearm Hand Grip Rail Toggle */}
-        <div className="hidden sm:flex flex-col gap-2">
-          <button
-            onClick={() => {
-              tacticalAudio.playBlip();
-              onToggleDockSide();
-            }}
-            title="Dock Slate to Left or Right Forearm Grip"
-            className="w-12 h-12 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-amber-400 flex items-center justify-center shadow-xl transition-all active:scale-95"
-          >
-            <Sliders className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

@@ -32,6 +32,7 @@ interface MarsCanvasProps {
   terrainSource: TerrainSource;
   simulationProgress: number;
   timeOfDay?: TimeOfDayPreset;
+  solTimeHour?: number;
   lmstClock?: string;
   onTerrainClick?: (coords: { x: number; y: number; elevation: number }) => void;
   onStlLoaded?: (triangleCount: number) => void;
@@ -268,35 +269,54 @@ function buildAstronautModel(group: THREE.Group, callsign: 'EV-1' | 'EV-2', colo
   ant.rotation.z = -0.15;
   group.add(ant);
 
-  // Articulated Arms & Pressurized Glove Gauntlets
+  // Articulated Arms (Pivoting from Shoulders at y = 3.2)
   const armGeo = new THREE.CylinderGeometry(0.32, 0.28, 1.8, 8);
+
+  const shoulderL = new THREE.Group();
+  shoulderL.name = 'shoulderL';
+  shoulderL.position.set(-1.45, 3.2, 0);
   const armL = new THREE.Mesh(armGeo, whiteSuitMat);
-  armL.position.set(-1.45, 2.5, 0);
-  armL.rotation.z = 0.25;
-  group.add(armL);
+  armL.position.set(0, -0.8, 0);
+  armL.rotation.z = 0.2;
+  shoulderL.add(armL);
+  group.add(shoulderL);
+
+  const shoulderR = new THREE.Group();
+  shoulderR.name = 'shoulderR';
+  shoulderR.position.set(1.45, 3.2, 0);
   const armR = new THREE.Mesh(armGeo, whiteSuitMat);
-  armR.position.set(1.45, 2.5, 0);
-  armR.rotation.z = -0.25;
-  group.add(armR);
+  armR.position.set(0, -0.8, 0);
+  armR.rotation.z = -0.2;
+  shoulderR.add(armR);
+  group.add(shoulderR);
 
-  // Dual Articulated Legs
+  // Dual Articulated Legs (Pivoting from Hips at y = 2.1)
   const legGeo = new THREE.CylinderGeometry(0.42, 0.46, 2.1, 8);
-  const legL = new THREE.Mesh(legGeo, whiteSuitMat);
-  legL.position.set(-0.55, 1.05, 0);
-  legL.castShadow = true;
-  group.add(legL);
-  const legR = legL.clone();
-  legR.position.x = 0.55;
-  group.add(legR);
-
-  // Heavy-Duty Lugged Planetary Boots
   const bootGeo = new THREE.BoxGeometry(0.75, 0.45, 1.3);
+
+  const hipL = new THREE.Group();
+  hipL.name = 'hipL';
+  hipL.position.set(-0.55, 2.1, 0);
+  const legL = new THREE.Mesh(legGeo, whiteSuitMat);
+  legL.position.set(0, -1.05, 0);
+  legL.castShadow = true;
+  hipL.add(legL);
   const bootL = new THREE.Mesh(bootGeo, darkTrimMat);
-  bootL.position.set(-0.55, 0.22, 0.2);
-  group.add(bootL);
+  bootL.position.set(0, -1.9, 0.2);
+  hipL.add(bootL);
+  group.add(hipL);
+
+  const hipR = new THREE.Group();
+  hipR.name = 'hipR';
+  hipR.position.set(0.55, 2.1, 0);
+  const legR = legL.clone();
+  legR.position.set(0, -1.05, 0);
+  legR.castShadow = true;
+  hipR.add(legR);
   const bootR = bootL.clone();
-  bootR.position.x = 0.55;
-  group.add(bootR);
+  bootR.position.set(0, -1.9, 0.2);
+  hipR.add(bootR);
+  group.add(hipR);
 
   // Head-Mounted EVA Floodlight
   const headLight = new THREE.SpotLight(0xfff7ed, 3.5, 75, Math.PI * 0.25, 0.4, 1.6);
@@ -754,6 +774,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   terrainSource,
   simulationProgress,
   timeOfDay = 'day',
+  solTimeHour,
   onTerrainClick,
   onStlLoaded,
   onCameraHeadingChange,
@@ -1225,7 +1246,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     }
   }, [layerSettings, activeLayers]);
 
-  // Diurnal Martian Solar & Moon Lighting Updates
+  // Diurnal Martian Solar & Moon Lighting Updates (Continuous LMST Solar Ephemeris)
   useEffect(() => {
     if (!sceneRef.current || !sunLightRef.current || !ambientLightRef.current) return;
     if (cameraModeRef.current === 'globe') return;
@@ -1233,54 +1254,69 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     const sunLight = sunLightRef.current;
     const ambientLight = ambientLightRef.current;
 
-    if (timeOfDay === 'sunset') {
+    // Continuous Sol Hour (0.00 to 24.66 LMST)
+    const hour = solTimeHour !== undefined
+      ? solTimeHour
+      : timeOfDay === 'sunset'
+      ? 18.25
+      : timeOfDay === 'night'
+      ? 22.75
+      : 14.65;
+
+    // Solar angle: 0h = midnight, 6h = dawn, 12h = noon, 18.2h = blue sunset
+    const solFraction = (hour % 24.66) / 24.66;
+    const solarElevation = Math.sin((solFraction - 0.25) * Math.PI * 2);
+    const solarAzimuth = solFraction * Math.PI * 2;
+
+    const sunDist = 1200;
+    const sunX = Math.cos(solarAzimuth) * sunDist;
+    const sunY = solarElevation * 900;
+    const sunZ = Math.sin(solarAzimuth * 0.5) * 800;
+
+    sunLight.position.set(sunX, Math.max(-200, sunY), sunZ);
+    if (terrainMaterialRef.current) {
+      terrainMaterialRef.current.uniforms.uSunDirection.value.set(sunX, Math.max(10, sunY), sunZ).normalize();
+    }
+
+    if (sunY > 120) {
+      // Day Mode — High Sun with Warm Butterscotch Sky
+      const dayColor = new THREE.Color(0xc88a65);
+      scene.background = dayColor;
+      if (scene.fog) (scene.fog as THREE.FogExp2).color = dayColor;
+      ambientLight.color.setHex(0xd49b78);
+      ambientLight.intensity = 1.15;
+
+      sunLight.color.setHex(0xfff7ed);
+      sunLight.intensity = 2.6;
+
+      if (nightSkyGroupRef.current) nightSkyGroupRef.current.visible = false;
+    } else if (sunY > -80) {
+      // Martian Blue Sunset / Twilight (Atmospheric Rayleigh forward-scattering)
       const sunsetFog = new THREE.Color(0x4a241b);
       scene.background = sunsetFog;
       if (scene.fog) (scene.fog as THREE.FogExp2).color = sunsetFog;
       ambientLight.color.setHex(0x783526);
       ambientLight.intensity = 0.85;
 
-      sunLight.color.setHex(0x60a5fa); // Martian blue twilight forward-scattering!
-      sunLight.intensity = 1.9;
-      sunLight.position.set(-850, 140, -320);
+      sunLight.color.setHex(0x60a5fa); // Cyan-Blue twilight
+      sunLight.intensity = 2.0;
 
       if (nightSkyGroupRef.current) nightSkyGroupRef.current.visible = false;
-      if (terrainMaterialRef.current) {
-        terrainMaterialRef.current.uniforms.uSunDirection.value.set(-850, 140, -320).normalize();
-      }
-    } else if (timeOfDay === 'night') {
+    } else {
+      // Night Mode — Starfield & Phobos Cool Moonlight
       const nightColor = new THREE.Color(0x060810);
       scene.background = nightColor;
       if (scene.fog) (scene.fog as THREE.FogExp2).color = nightColor;
       ambientLight.color.setHex(0x1e293b);
       ambientLight.intensity = 0.35;
 
-      sunLight.color.setHex(0x94a3b8); // Phobos cool moonlight
-      sunLight.intensity = 0.55;
+      sunLight.color.setHex(0x94a3b8);
+      sunLight.intensity = 0.6;
       sunLight.position.set(400, 750, 250);
 
       if (nightSkyGroupRef.current) nightSkyGroupRef.current.visible = true;
-      if (terrainMaterialRef.current) {
-        terrainMaterialRef.current.uniforms.uSunDirection.value.set(400, 750, 250).normalize();
-      }
-    } else {
-      // Day Mode
-      const dayColor = new THREE.Color(0xc88a65);
-      scene.background = dayColor;
-      if (scene.fog) (scene.fog as THREE.FogExp2).color = dayColor;
-      ambientLight.color.setHex(0xd49b78);
-      ambientLight.intensity = 1.1;
-
-      sunLight.color.setHex(0xfff7ed);
-      sunLight.intensity = 2.6;
-      sunLight.position.set(-600, 750, -450);
-
-      if (nightSkyGroupRef.current) nightSkyGroupRef.current.visible = false;
-      if (terrainMaterialRef.current) {
-        terrainMaterialRef.current.uniforms.uSunDirection.value.set(-600, 750, -450).normalize();
-      }
     }
-  }, [timeOfDay]);
+  }, [timeOfDay, solTimeHour]);
 
   // Handle Google Earth Nav Actions
   useEffect(() => {
