@@ -2,6 +2,7 @@
   "name": "nasa-team-stella-martian-map",
   "private": true,
   "version": "1.0.0",
+  "homepage": "https://nasa-team-stella-martian-map.vercel.app/",
   "description": "NASA Space Apps Challenge 2026 - Team Stella: Martian Surface Operations & Tactical EVA Telemetry System (ARES-OCTANT)",
   "type": "module",
   "scripts": {

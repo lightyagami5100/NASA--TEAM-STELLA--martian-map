@@ -1,6 +1,10 @@
 # NASA Space Apps Challenge 2026: Team Stella
 ## Martian Surface Operations & Tactical EVA Telemetry System (ARES-OCTANT)
 
+> **Live Operational Deployment:** [https://nasa-team-stella-martian-map.vercel.app/](https://nasa-team-stella-martian-map.vercel.app/)  
+> **Official Space Apps Project Link:** [https://nasa-team-stella-martian-map.vercel.app/](https://nasa-team-stella-martian-map.vercel.app/)  
+> **Repository:** [https://github.com/lightyagami5100/NASA--TEAM-STELLA--martian-map](https://github.com/lightyagami5100/NASA--TEAM-STELLA--martian-map)
+
 ARES-OCTANT is an aerospace-grade mission control and extravehicular activity (EVA) navigation platform engineered for human exploration of Jezero Crater, Mars. The system complies with NASA Human Integration Design standards (NASA-STD-3001) and NASA EVA Flight Rules (EVA-FR-101 through 106).
 
 ---
