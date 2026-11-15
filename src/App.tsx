@@ -118,6 +118,14 @@ export default function App() {
 
   // Camera azimuth & tilt tracking for Google Earth navigation widgets
   const [cameraHeading, setCameraHeading] = useState({ theta: Math.PI * 0.25, phi: Math.PI * 0.32 });
+  const handleCameraHeadingChange = useCallback((theta: number, phi: number) => {
+    setCameraHeading((prev) => {
+      if (Math.abs(prev.theta - theta) < 0.012 && Math.abs(prev.phi - phi) < 0.012) {
+        return prev;
+      }
+      return { theta, phi };
+    });
+  }, []);
   const [navAction, setNavAction] = useState<CameraNavAction | null>(null);
 
   const [isSimulating, setIsSimulating] = useState(false);
@@ -279,14 +287,14 @@ export default function App() {
         activePath={activePath}
         layerSettings={layerSettings}
         cameraMode={cameraMode}
-        onSetCameraMode={(mode) => setCameraMode(mode)}
+        onSetCameraMode={setCameraMode}
         terrainSource={terrainSource}
         simulationProgress={simulationProgress}
         traverseMode={traverseMode}
         timeOfDay={timeOfDay}
         solTimeHour={solTimeHour}
         onTerrainClick={handleTerrainClick}
-        onCameraHeadingChange={(theta, phi) => setCameraHeading({ theta, phi })}
+        onCameraHeadingChange={handleCameraHeadingChange}
         navAction={navAction}
       />
 

@@ -217,7 +217,7 @@ export function createDetailedMarsAlbedoTexture(): THREE.CanvasTexture {
 
   // 1.2 Fine Geological Sand Flecks & Regolith Granularity
   ctx.fillStyle = 'rgba(40, 12, 6, 0.05)';
-  for (let i = 0; i < 7000; i++) {
+  for (let i = 0; i < 1500; i++) {
     const nx = Math.random() * W;
     const ny = Math.random() * H;
     const nw = Math.random() * 4 + 1;
@@ -225,7 +225,7 @@ export function createDetailedMarsAlbedoTexture(): THREE.CanvasTexture {
     ctx.fillRect(nx, ny, nw, nh);
   }
   ctx.fillStyle = 'rgba(255, 195, 140, 0.04)';
-  for (let i = 0; i < 5000; i++) {
+  for (let i = 0; i < 1000; i++) {
     const nx = Math.random() * W;
     const ny = Math.random() * H;
     const nw = Math.random() * 3 + 1;
@@ -732,6 +732,32 @@ export function createMarsCloudTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+// Cross-browser safe rounded rectangle drawing helper (prevents TypeError on older canvas contexts)
+function drawSafeRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+}
+
 // 4. Create 3D Standing Mission Pin & Billboard Badge
 function createMissionLandingPin(site: MarsLandingSite, radius: number): THREE.Group {
   const pinGroup = new THREE.Group();
@@ -800,7 +826,7 @@ function createMissionLandingPin(site: MarsLandingSite, radius: number): THREE.G
   const bCtx = badgeCanvas.getContext('2d')!;
 
   bCtx.fillStyle = 'rgba(8, 14, 24, 0.88)';
-  bCtx.roundRect(4, 4, 376, 88, 12);
+  drawSafeRoundRect(bCtx, 4, 4, 376, 88, 12);
   bCtx.fill();
   bCtx.strokeStyle = site.color;
   bCtx.lineWidth = 2.5;
@@ -1021,7 +1047,7 @@ export function buildMroSatellite(): THREE.Group {
   labelCanvas.height = 64;
   const lCtx = labelCanvas.getContext('2d')!;
   lCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-  lCtx.roundRect(4, 4, 248, 56, 8);
+  drawSafeRoundRect(lCtx, 4, 4, 248, 56, 8);
   lCtx.fill();
   lCtx.strokeStyle = '#38bdf8';
   lCtx.lineWidth = 2;
@@ -1070,7 +1096,7 @@ export function buildPhobosMoon(): THREE.Group {
   labelCanvas.height = 48;
   const lCtx = labelCanvas.getContext('2d')!;
   lCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-  lCtx.roundRect(4, 4, 184, 40, 8);
+  drawSafeRoundRect(lCtx, 4, 4, 184, 40, 8);
   lCtx.fill();
   lCtx.strokeStyle = '#fbbf24';
   lCtx.lineWidth = 1.5;
@@ -1118,7 +1144,7 @@ export function buildDeimosMoon(): THREE.Group {
   labelCanvas.height = 48;
   const lCtx = labelCanvas.getContext('2d')!;
   lCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-  lCtx.roundRect(4, 4, 184, 40, 8);
+  drawSafeRoundRect(lCtx, 4, 4, 184, 40, 8);
   lCtx.fill();
   lCtx.strokeStyle = '#94a3b8';
   lCtx.lineWidth = 1.5;
@@ -1194,6 +1220,8 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
     bumpScale: 3.8,
     roughness: 0.84,
     metalness: 0.04,
+    emissive: new THREE.Color(0x1a0d07),
+    emissiveIntensity: 0.28,
   });
 
   const marsMesh = new THREE.Mesh(marsSphereGeo, marsMat);
@@ -1231,25 +1259,26 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
   const innerAtmosphereGeo = new THREE.SphereGeometry(R + 1.5, 96, 96);
   const innerAtmosphereMat = new THREE.ShaderMaterial({
     vertexShader: `
-      varying vec3 vNormal;
-      varying vec3 vWorldPosition;
+      varying vec3 vNormalView;
+      varying vec3 vPositionView;
       void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPos.xyz;
-        gl_Position = projectionMatrix * viewMatrix * worldPos;
+        vNormalView = normalize(normalMatrix * normal);
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        vPositionView = mvPos.xyz;
+        gl_Position = projectionMatrix * mvPos;
       }
     `,
     fragmentShader: `
       uniform vec3 uColor;
       uniform float uPower;
       uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vWorldPosition;
+      varying vec3 vNormalView;
+      varying vec3 vPositionView;
       void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        float rim = 1.0 - max(0.0, dot(vNormal, viewDir));
-        float alpha = pow(rim, uPower) * uIntensity;
+        vec3 viewDir = normalize(-vPositionView);
+        float cosTheta = clamp(dot(normalize(vNormalView), viewDir), 0.0, 1.0);
+        float rim = 1.0 - cosTheta;
+        float alpha = pow(max(rim, 0.0001), uPower) * uIntensity;
         gl_FragColor = vec4(uColor, alpha);
       }
     `,
@@ -1270,25 +1299,25 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
   const outerHaloGeo = new THREE.SphereGeometry(R + 10.5, 96, 96);
   const outerHaloMat = new THREE.ShaderMaterial({
     vertexShader: `
-      varying vec3 vNormal;
-      varying vec3 vWorldPosition;
+      varying vec3 vNormalView;
+      varying vec3 vPositionView;
       void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPos.xyz;
-        gl_Position = projectionMatrix * viewMatrix * worldPos;
+        vNormalView = normalize(normalMatrix * normal);
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        vPositionView = mvPos.xyz;
+        gl_Position = projectionMatrix * mvPos;
       }
     `,
     fragmentShader: `
       uniform vec3 uColor;
       uniform float uPower;
       uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vWorldPosition;
+      varying vec3 vNormalView;
+      varying vec3 vPositionView;
       void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        float rim = max(0.0, dot(-vNormal, viewDir));
-        float alpha = pow(rim, uPower) * uIntensity;
+        vec3 viewDir = normalize(-vPositionView);
+        float rim = clamp(dot(-normalize(vNormalView), viewDir), 0.0, 1.0);
+        float alpha = pow(max(rim, 0.0001), uPower) * uIntensity;
         gl_FragColor = vec4(uColor, alpha);
       }
     `,
@@ -1309,25 +1338,25 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
   const dustHaloGeo = new THREE.SphereGeometry(R + 15.0, 96, 96);
   const dustHaloMat = new THREE.ShaderMaterial({
     vertexShader: `
-      varying vec3 vNormal;
-      varying vec3 vWorldPosition;
+      varying vec3 vNormalView;
+      varying vec3 vPositionView;
       void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPos.xyz;
-        gl_Position = projectionMatrix * viewMatrix * worldPos;
+        vNormalView = normalize(normalMatrix * normal);
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        vPositionView = mvPos.xyz;
+        gl_Position = projectionMatrix * mvPos;
       }
     `,
     fragmentShader: `
       uniform vec3 uColor;
       uniform float uPower;
       uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vWorldPosition;
+      varying vec3 vNormalView;
+      varying vec3 vPositionView;
       void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        float rim = max(0.0, dot(-vNormal, viewDir));
-        float alpha = pow(rim, uPower) * uIntensity;
+        vec3 viewDir = normalize(-vPositionView);
+        float rim = clamp(dot(-normalize(vNormalView), viewDir), 0.0, 1.0);
+        float alpha = pow(max(rim, 0.0001), uPower) * uIntensity;
         gl_FragColor = vec4(uColor, alpha);
       }
     `,

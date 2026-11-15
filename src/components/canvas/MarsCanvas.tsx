@@ -519,14 +519,14 @@ function buildPressurizedRoverModel(group: THREE.Group) {
   const lightL = new THREE.SpotLight(0xfff7ed, 6.0, 180, Math.PI * 0.28, 0.4, 1.4);
   lightL.position.set(-3.2, 5.2, 7.2);
   lightL.target.position.set(-3.2, 0, 50);
-  lightL.castShadow = true;
+  lightL.castShadow = false;
   group.add(lightL);
   group.add(lightL.target);
 
   const lightR = new THREE.SpotLight(0xfff7ed, 6.0, 180, Math.PI * 0.28, 0.4, 1.4);
   lightR.position.set(3.2, 5.2, 7.2);
   lightR.target.position.set(3.2, 0, 50);
-  lightR.castShadow = true;
+  lightR.castShadow = false;
   group.add(lightR);
   group.add(lightR.target);
 
@@ -823,6 +823,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   const phobosMeshRef = useRef<THREE.Mesh | null>(null);
 
   const pointerStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const forwardHeadingVecRef = useRef(new THREE.Vector3());
+  const lastReportedHeadingRef = useRef({ theta: 0, phi: 0 });
 
   const cameraModeRef = useRef(cameraMode);
   const onCameraHeadingChangeRef = useRef(onCameraHeadingChange);
@@ -996,8 +998,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     const sunLight = new THREE.DirectionalLight(0xfff7ed, 2.6);
     sunLight.position.set(-600, 750, -450);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
     sunLight.shadow.camera.near = 100;
     sunLight.shadow.camera.far = 2500;
     const shadowD = 650;
@@ -1053,7 +1055,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
     const terrainMesh = new THREE.Mesh(terrainGeo, shaderMat);
     terrainMesh.receiveShadow = true;
-    terrainMesh.castShadow = true;
+    terrainMesh.castShadow = false;
     terrainMeshRef.current = terrainMesh;
     scene.add(terrainMesh);
 
@@ -1120,7 +1122,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
     const outerHorizonMesh = new THREE.Mesh(outerHorizonGeo, outerHorizonMat);
     outerHorizonMesh.name = 'outerHorizon';
-    outerHorizonMesh.receiveShadow = true;
+    outerHorizonMesh.receiveShadow = false;
     outerHorizonMeshRef.current = outerHorizonMesh;
     scene.add(outerHorizonMesh);
 
@@ -1150,7 +1152,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
         const stlMesh = new THREE.Mesh(stlGeom, shaderMat);
         stlMesh.receiveShadow = true;
-        stlMesh.castShadow = true;
+        stlMesh.castShadow = false;
         // Aligned with DEM elevation datum so crater floor is at Y~7.6 and Kodiak Butte at Y~64.6
         stlMesh.position.set(0, -320.9, 0);
         stlMesh.visible = false;
@@ -1204,7 +1206,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
           const objMesh = new THREE.Mesh(objGeom, shaderMat);
           objMesh.receiveShadow = true;
-          objMesh.castShadow = true;
+          objMesh.castShadow = false;
           // Calibrated elevation matching DEM crater floor (Y ~ 7.6) and Kodiak Butte (Y ~ 65)
           objMesh.position.set(0, -290.0, 0);
           objMesh.visible = false;
@@ -1262,7 +1264,6 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
     const globeGroup = new THREE.Group();
     globeGroupRef.current = globeGroup;
-    globeControllerRef.current = buildDetailedMarsGlobe(globeGroup);
     globeGroup.visible = false;
     scene.add(globeGroup);
 
@@ -1339,12 +1340,16 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
           camera.position.y = minCamY;
         }
 
-        const forward = new THREE.Vector3();
-        camera.getWorldDirection(forward);
-        const theta = Math.atan2(forward.x, forward.z);
-        const phi = Math.acos(Math.max(-1, Math.min(1, forward.y)));
+        camera.getWorldDirection(forwardHeadingVecRef.current);
+        const theta = Math.atan2(forwardHeadingVecRef.current.x, forwardHeadingVecRef.current.z);
+        const phi = Math.acos(Math.max(-1, Math.min(1, forwardHeadingVecRef.current.y)));
 
-        if (onCameraHeadingChangeRef.current) {
+        if (
+          onCameraHeadingChangeRef.current &&
+          (Math.abs(theta - lastReportedHeadingRef.current.theta) > 0.012 ||
+           Math.abs(phi - lastReportedHeadingRef.current.phi) > 0.012)
+        ) {
+          lastReportedHeadingRef.current = { theta, phi };
           onCameraHeadingChangeRef.current(theta, phi);
         }
       } else if (cameraModeRef.current === 'globe') {
@@ -1483,10 +1488,18 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   // Diurnal Martian Solar & Moon Lighting Updates (Continuous LMST Solar Ephemeris)
   useEffect(() => {
     if (!sceneRef.current || !sunLightRef.current || !ambientLightRef.current) return;
-    if (cameraModeRef.current === 'globe') return;
     const scene = sceneRef.current;
     const sunLight = sunLightRef.current;
     const ambientLight = ambientLightRef.current;
+
+    if (cameraMode === 'globe') {
+      sunLight.position.set(500, 400, 450);
+      sunLight.color.setHex(0xfff8f0);
+      sunLight.intensity = 2.8;
+      ambientLight.color.setHex(0xd49b78);
+      ambientLight.intensity = 1.35;
+      return;
+    }
 
     // Continuous Sol Hour (0.00 to 24.66 LMST)
     const hour = solTimeHour !== undefined
@@ -1559,7 +1572,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
       if (nightSkyGroupRef.current) nightSkyGroupRef.current.visible = true;
     }
-  }, [timeOfDay, solTimeHour]);
+  }, [timeOfDay, solTimeHour, cameraMode]);
 
   // Handle Google Earth Nav Actions
   useEffect(() => {
@@ -1869,6 +1882,11 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       if (roverGroupRef.current) roverGroupRef.current.visible = false;
       if (walkbackRingRef.current) walkbackRingRef.current.visible = false;
       if (dustDevilsGroupRef.current) dustDevilsGroupRef.current.visible = false;
+
+      // Lazy build globe system if not yet created
+      if (!globeControllerRef.current && globeGroupRef.current) {
+        globeControllerRef.current = buildDetailedMarsGlobe(globeGroupRef.current);
+      }
       globeGroupRef.current.visible = true;
 
       // Deep space cosmic obsidian background & clear fog in orbit!
@@ -1880,10 +1898,31 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
         nightSkyGroupRef.current.visible = true;
       }
 
+      // Allow 360 degree orbital rotation around Mars globe
+      controls.maxPolarAngle = Math.PI;
+      controls.minPolarAngle = 0.01;
+      controls.minDistance = 210;
+      controls.maxDistance = 1400;
+
       controls.target.set(0, 0, 0);
-      cameraRef.current.position.set(0, 150, 420);
+      cameraRef.current.position.set(200, 140, 360);
       controls.update();
+
+      if (sunLightRef.current) {
+        sunLightRef.current.position.set(500, 400, 450);
+        sunLightRef.current.color.setHex(0xfff8f0);
+        sunLightRef.current.intensity = 2.8;
+      }
+      if (ambientLightRef.current) {
+        ambientLightRef.current.color.setHex(0xd49b78);
+        ambientLightRef.current.intensity = 1.35;
+      }
     } else {
+      // Restore surface controls constraints
+      controls.maxPolarAngle = Math.PI * 0.46;
+      controls.minPolarAngle = 0.05;
+      controls.minDistance = 25;
+      controls.maxDistance = 1500;
       if (outerHorizonMeshRef.current) outerHorizonMeshRef.current.visible = true;
       if (markersGroupRef.current) markersGroupRef.current.visible = true;
       if (pathMeshRef.current) pathMeshRef.current.visible = true;
