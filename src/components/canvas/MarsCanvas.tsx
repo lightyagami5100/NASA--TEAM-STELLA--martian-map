@@ -801,6 +801,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const terrainMeshRef = useRef<THREE.Mesh | null>(null);
+  const outerHorizonMeshRef = useRef<THREE.Mesh | null>(null);
   const terrainMaterialRef = useRef<THREE.ShaderMaterial | null>(null);
   const stlMeshRef = useRef<THREE.Mesh | null>(null);
   const objMeshRef = useRef<THREE.Mesh | null>(null);
@@ -954,7 +955,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     // Authentic Butterscotch Martian Rayleigh / Dust-Scattered Atmosphere
     const martianFogColor = new THREE.Color(0xc88a65);
     scene.background = martianFogColor;
-    scene.fog = new THREE.FogExp2(0xc88a65, 0.0016);
+    scene.fog = new THREE.FogExp2(0xc88a65, 0.00075);
 
     const camera = new THREE.PerspectiveCamera(48, width / height, 1, 7500);
     cameraRef.current = camera;
@@ -1055,6 +1056,73 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     terrainMesh.castShadow = true;
     terrainMeshRef.current = terrainMesh;
     scene.add(terrainMesh);
+
+    // Endless Outer Martian Horizon Terrain (Jezero Crater Caldera Rim & Isidis Planitia)
+    // Extends from tactical perimeter r = 485 out to r = 4500 (76 physical km horizon)
+    const outerHorizonGeo = new THREE.RingGeometry(485, 4500, 128, 48);
+    outerHorizonGeo.rotateX(-Math.PI / 2);
+
+    const outerPos = outerHorizonGeo.attributes.position;
+    const outerUv = outerHorizonGeo.attributes.uv;
+
+    for (let i = 0; i < outerPos.count; i++) {
+      const vx = outerPos.getX(i);
+      const vz = outerPos.getZ(i);
+      const r = Math.hypot(vx, vz);
+      const theta = Math.atan2(vz, vx);
+
+      // Planar UV mapping for seamless texturing
+      outerUv.setXY(i, vx / 500, vz / 500);
+
+      // Transition factor from tactical inner edge (r=485) to outer horizon (r=4500)
+      const baseFloorY = to3DHeight(-2560); // Crater floor level (~7.6)
+
+      // 1. Jezero Crater Caldera Rim Mountains (r: 550 -> 1850)
+      // Rim rises up to +220m to +380m above crater floor
+      const rimEnvelope = Math.exp(-Math.pow((r - 1150) / 420, 2));
+
+      // Breached canyon to the west (Neretva Vallis gorge at theta ~ PI, vx < 0)
+      const westAngleDist = Math.abs(Math.atan2(Math.sin(theta - Math.PI), Math.cos(theta - Math.PI)));
+      const breachFactor = Math.min(1.0, 0.25 + Math.pow(westAngleDist / 0.55, 2));
+
+      // Mountain ridges and crags along the caldera rim
+      const mountainHarmonics =
+        Math.sin(theta * 3.0) * 14.0 +
+        Math.cos(theta * 7.0 + 0.4) * 10.0 +
+        Math.sin(theta * 13.0) * 6.0 +
+        Math.sin(vx * 0.006) * Math.cos(vz * 0.006) * 18.0;
+
+      const rimElevation = rimEnvelope * (52.0 + mountainHarmonics) * breachFactor;
+
+      // 2. Rolling Isidis Planitia Plains beyond caldera rim (r > 1600)
+      const plainsFactor = Math.min(1.0, Math.max(0.0, (r - 1600) / 1000));
+      const plainsDunes =
+        Math.sin(vx * 0.0016) * Math.cos(vz * 0.0016) * 14.0 +
+        Math.sin(r * 0.0035) * 8.0;
+      const plainsElevation = plainsFactor * (12.0 + plainsDunes);
+
+      // 3. Subtle micro-relief across outer terrain
+      const microNoise = Math.sin(vx * 0.04) * Math.cos(vz * 0.04) * 1.8;
+
+      outerPos.setY(i, baseFloorY + rimElevation + plainsElevation + microNoise);
+    }
+
+    outerHorizonGeo.computeVertexNormals();
+    outerUv.needsUpdate = true;
+
+    const outerHorizonMat = new THREE.MeshStandardMaterial({
+      map: baseTexture,
+      roughness: 0.92,
+      metalness: 0.04,
+      color: new THREE.Color(0xb56338),
+      flatShading: false,
+    });
+
+    const outerHorizonMesh = new THREE.Mesh(outerHorizonGeo, outerHorizonMat);
+    outerHorizonMesh.name = 'outerHorizon';
+    outerHorizonMesh.receiveShadow = true;
+    outerHorizonMeshRef.current = outerHorizonMesh;
+    scene.add(outerHorizonMesh);
 
     // Official NASA Mars Trek 3D STL Model Loader
     const stlLoader = new STLLoader();
@@ -1346,21 +1414,9 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
         });
       }
 
-      // High-Fidelity 3D Mars Planetary Globe Spin & Atmosphere
+      // High-Fidelity 3D Mars Planetary Globe Spin, Atmosphere & Orbital Satellites
       if (globeGroupRef.current && globeGroupRef.current.visible && globeControllerRef.current) {
-        const gc = globeControllerRef.current;
-        gc.planetSpinGroup.rotation.y += 0.0006;
-        gc.cloudSpinGroup.rotation.y += 0.00085;
-
-        // Animate pulsating landing site beacon rings
-        const pulseScale = 1.0 + Math.sin(elapsed * 3.5) * 0.25;
-        const pulseOpacity = 0.5 + Math.sin(elapsed * 3.5) * 0.4;
-        gc.pulseRings.forEach((ring) => {
-          ring.scale.set(pulseScale, pulseScale, pulseScale);
-          if (ring.material instanceof THREE.MeshBasicMaterial) {
-            ring.material.opacity = pulseOpacity;
-          }
-        });
+        globeControllerRef.current.update(elapsed);
       }
 
       renderer.render(scene, camera);
@@ -1460,7 +1516,10 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       // Day Mode — High Sun with Warm Butterscotch Sky
       const dayColor = new THREE.Color(0xc88a65);
       scene.background = dayColor;
-      if (scene.fog) (scene.fog as THREE.FogExp2).color = dayColor;
+      if (scene.fog) {
+        (scene.fog as THREE.FogExp2).color = dayColor;
+        (scene.fog as THREE.FogExp2).density = 0.00075;
+      }
       ambientLight.color.setHex(0xd49b78);
       ambientLight.intensity = 1.15;
 
@@ -1472,7 +1531,10 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       // Martian Blue Sunset / Twilight (Atmospheric Rayleigh forward-scattering)
       const sunsetFog = new THREE.Color(0x4a241b);
       scene.background = sunsetFog;
-      if (scene.fog) (scene.fog as THREE.FogExp2).color = sunsetFog;
+      if (scene.fog) {
+        (scene.fog as THREE.FogExp2).color = sunsetFog;
+        (scene.fog as THREE.FogExp2).density = 0.00075;
+      }
       ambientLight.color.setHex(0x783526);
       ambientLight.intensity = 0.85;
 
@@ -1484,7 +1546,10 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       // Night Mode — Starfield & Phobos Cool Moonlight
       const nightColor = new THREE.Color(0x060810);
       scene.background = nightColor;
-      if (scene.fog) (scene.fog as THREE.FogExp2).color = nightColor;
+      if (scene.fog) {
+        (scene.fog as THREE.FogExp2).color = nightColor;
+        (scene.fog as THREE.FogExp2).density = 0.00075;
+      }
       ambientLight.color.setHex(0x1e293b);
       ambientLight.intensity = 0.35;
 
@@ -1794,6 +1859,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
     if (cameraMode === 'globe') {
       if (terrainMeshRef.current) terrainMeshRef.current.visible = false;
+      if (outerHorizonMeshRef.current) outerHorizonMeshRef.current.visible = false;
       if (stlMeshRef.current) stlMeshRef.current.visible = false;
       if (objMeshRef.current) objMeshRef.current.visible = false;
       if (markersGroupRef.current) markersGroupRef.current.visible = false;
@@ -1818,6 +1884,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       cameraRef.current.position.set(0, 150, 420);
       controls.update();
     } else {
+      if (outerHorizonMeshRef.current) outerHorizonMeshRef.current.visible = true;
       if (markersGroupRef.current) markersGroupRef.current.visible = true;
       if (pathMeshRef.current) pathMeshRef.current.visible = true;
       if (ev1GroupRef.current) ev1GroupRef.current.visible = true;
@@ -1831,7 +1898,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       if (sceneRef.current) {
         const fogColor = timeOfDay === 'sunset' ? new THREE.Color(0x4a241b) : timeOfDay === 'night' ? new THREE.Color(0x060810) : new THREE.Color(0xc88a65);
         sceneRef.current.background = fogColor;
-        sceneRef.current.fog = new THREE.FogExp2(fogColor, 0.0016);
+        sceneRef.current.fog = new THREE.FogExp2(fogColor, 0.00075);
       }
       if (nightSkyGroupRef.current) {
         nightSkyGroupRef.current.visible = timeOfDay === 'night';
