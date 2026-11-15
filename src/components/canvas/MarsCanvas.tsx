@@ -823,6 +823,7 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
   const phobosMeshRef = useRef<THREE.Mesh | null>(null);
 
   const pointerStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const canvasMountRef = useRef<HTMLDivElement | null>(null);
   const forwardHeadingVecRef = useRef(new THREE.Vector3());
   const lastReportedHeadingRef = useRef({ theta: 0, phi: 0 });
 
@@ -946,8 +947,9 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
 
   // 1. Scene, GLSL Material, Camera, Lighting & Terrain Setup
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !canvasMountRef.current) return;
     const container = containerRef.current;
+    const canvasMount = canvasMountRef.current;
     const width = container.clientWidth;
     const height = container.clientHeight;
 
@@ -975,8 +977,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
-    container.innerHTML = '';
-    container.appendChild(renderer.domElement);
+    canvasMount.innerHTML = '';
+    canvasMount.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controlsRef.current = controls;
@@ -1443,6 +1445,10 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
       globeControllerRef.current?.dispose();
+      globeControllerRef.current = null;
+      if (canvasMount.contains(renderer.domElement)) {
+        canvasMount.removeChild(renderer.domElement);
+      }
       controls.dispose();
       renderer.dispose();
     };
@@ -2077,6 +2083,9 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
     >
+      {/* Isolated Three.js WebGL Canvas Mount (prevents React removeChild conflict) */}
+      <div ref={canvasMountRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+
       {/* Hover Waypoint Telemetry Pill */}
       {hoveredWaypoint && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none z-20 px-3.5 py-1.5 rounded hud-panel border border-sky-400/50 text-xs shadow-2xl flex items-center gap-2.5 animate-fade-in font-mono">

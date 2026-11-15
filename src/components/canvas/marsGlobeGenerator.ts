@@ -1259,6 +1259,7 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
   const innerAtmosphereGeo = new THREE.SphereGeometry(R + 1.5, 96, 96);
   const innerAtmosphereMat = new THREE.ShaderMaterial({
     vertexShader: `
+      precision highp float;
       varying vec3 vNormalView;
       varying vec3 vPositionView;
       void main() {
@@ -1269,6 +1270,7 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
       }
     `,
     fragmentShader: `
+      precision highp float;
       uniform vec3 uColor;
       uniform float uPower;
       uniform float uIntensity;
@@ -1299,6 +1301,7 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
   const outerHaloGeo = new THREE.SphereGeometry(R + 10.5, 96, 96);
   const outerHaloMat = new THREE.ShaderMaterial({
     vertexShader: `
+      precision highp float;
       varying vec3 vNormalView;
       varying vec3 vPositionView;
       void main() {
@@ -1309,6 +1312,7 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
       }
     `,
     fragmentShader: `
+      precision highp float;
       uniform vec3 uColor;
       uniform float uPower;
       uniform float uIntensity;
@@ -1338,6 +1342,7 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
   const dustHaloGeo = new THREE.SphereGeometry(R + 15.0, 96, 96);
   const dustHaloMat = new THREE.ShaderMaterial({
     vertexShader: `
+      precision highp float;
       varying vec3 vNormalView;
       varying vec3 vPositionView;
       void main() {
@@ -1348,6 +1353,7 @@ export function buildDetailedMarsGlobe(parentGroup: THREE.Group): GlobeControlle
       }
     `,
     fragmentShader: `
+      precision highp float;
       uniform vec3 uColor;
       uniform float uPower;
       uniform float uIntensity;
