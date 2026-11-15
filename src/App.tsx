@@ -411,6 +411,12 @@ export default function App() {
             onTiltDown={() => triggerNav('tiltDown')}
             onResetNorth={() => triggerNav('resetNorth')}
             onRecenter={() => triggerNav('recenter')}
+            onPanNorth={() => triggerNav('panNorth')}
+            onPanSouth={() => triggerNav('panSouth')}
+            onPanWest={() => triggerNav('panWest')}
+            onPanEast={() => triggerNav('panEast')}
+            onOrbitLeft={() => triggerNav('orbitLeft')}
+            onOrbitRight={() => triggerNav('orbitRight')}
             cameraTheta={cameraHeading.theta}
             cameraPhi={cameraHeading.phi}
             dockSide={dockSide}

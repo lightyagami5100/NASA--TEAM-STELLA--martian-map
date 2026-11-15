@@ -4,12 +4,18 @@ import {
   Plus,
   Minus,
   RotateCcw,
+  RotateCw,
   Maximize2,
   Minimize2,
   ChevronUp,
   ChevronDown,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   Eye,
-  Globe2
+  Globe2,
+  Compass,
 } from 'lucide-react';
 import { tacticalAudio } from '../../utils/audio';
 
@@ -23,6 +29,12 @@ interface GoogleEarthNavControlsProps {
   onResetNorth: () => void;
   onRotateHeading?: (delta: number) => void;
   onRecenter: () => void;
+  onPanNorth?: () => void;
+  onPanSouth?: () => void;
+  onPanWest?: () => void;
+  onPanEast?: () => void;
+  onOrbitLeft?: () => void;
+  onOrbitRight?: () => void;
   cameraTheta: number;
   cameraPhi: number;
   dockSide?: 'left' | 'right';
@@ -38,11 +50,18 @@ export const GoogleEarthNavControls: React.FC<GoogleEarthNavControlsProps> = ({
   onTiltDown,
   onResetNorth,
   onRecenter,
+  onPanNorth,
+  onPanSouth,
+  onPanWest,
+  onPanEast,
+  onOrbitLeft,
+  onOrbitRight,
   cameraTheta,
   dockSide = 'left',
   hasInspector = false,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showDpad, setShowDpad] = useState(false);
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -144,12 +163,40 @@ export const GoogleEarthNavControls: React.FC<GoogleEarthNavControlsProps> = ({
 
         <div className="w-5 h-px bg-[var(--border-subtle)] my-0.5" />
 
+        {/* Orbit Left / Right Buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              tacticalAudio.playBlip();
+              if (onOrbitLeft) onOrbitLeft();
+            }}
+            title="Orbit Counter-Clockwise [Key: Q]"
+            aria-label="Orbit left counter-clockwise"
+            className="glass-control-btn !w-5 !h-8 text-[10px]"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => {
+              tacticalAudio.playBlip();
+              if (onOrbitRight) onOrbitRight();
+            }}
+            title="Orbit Clockwise [Key: E]"
+            aria-label="Orbit right clockwise"
+            className="glass-control-btn !w-5 !h-8 text-[10px]"
+          >
+            <RotateCw className="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Zoom In & Out */}
         <button
           onClick={() => {
             tacticalAudio.playBlip();
             onZoomIn();
           }}
-          title="Zoom In"
+          title="Zoom In [Key: R / +]"
+          aria-label="Zoom camera in"
           className="glass-control-btn !w-10 !h-8"
         >
           <Plus className="w-4 h-4" />
@@ -160,11 +207,88 @@ export const GoogleEarthNavControls: React.FC<GoogleEarthNavControlsProps> = ({
             tacticalAudio.playBlip();
             onZoomOut();
           }}
-          title="Zoom Out"
+          title="Zoom Out [Key: F / -]"
+          aria-label="Zoom camera out"
           className="glass-control-btn !w-10 !h-8"
         >
           <Minus className="w-4 h-4" />
         </button>
+
+        {/* Pan Directional D-Pad Toggle */}
+        <button
+          onClick={() => {
+            tacticalAudio.playBlip();
+            setShowDpad(!showDpad);
+          }}
+          title="Toggle On-Screen Pan D-Pad Buttons [Keys: WASD / Arrows]"
+          aria-label="Toggle on-screen directional pan buttons"
+          className={`glass-control-btn !w-10 !h-8 text-[11px] font-bold ${showDpad ? '!bg-[var(--primary)] !text-white' : ''}`}
+        >
+          <Compass className="w-3.5 h-3.5" />
+        </button>
+
+        {/* On-Screen Directional Pan D-Pad (Touch & Mouse Support) */}
+        {showDpad && (
+          <div className="p-1.5 rounded-2xl glass-panel flex flex-col items-center gap-1 my-1 shadow-xl border border-[var(--border-subtle)] animate-fade-in">
+            <button
+              onClick={() => {
+                tacticalAudio.playBlip();
+                if (onPanNorth) onPanNorth();
+              }}
+              title="Pan North [Key: W / ↑]"
+              aria-label="Pan camera north"
+              className="w-7 h-7 rounded-lg glass-card flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--primary-bg)] transition cursor-pointer"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  tacticalAudio.playBlip();
+                  if (onPanWest) onPanWest();
+                }}
+                title="Pan West [Key: A / ←]"
+                aria-label="Pan camera west"
+                className="w-7 h-7 rounded-lg glass-card flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--primary-bg)] transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => {
+                  tacticalAudio.playBlip();
+                  onRecenter();
+                }}
+                title="Recenter [Key: Space]"
+                aria-label="Recenter camera on site"
+                className="w-7 h-7 rounded-lg glass-card flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary-bg)] transition cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => {
+                  tacticalAudio.playBlip();
+                  if (onPanEast) onPanEast();
+                }}
+                title="Pan East [Key: D / →]"
+                aria-label="Pan camera east"
+                className="w-7 h-7 rounded-lg glass-card flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--primary-bg)] transition cursor-pointer"
+              >
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                tacticalAudio.playBlip();
+                if (onPanSouth) onPanSouth();
+              }}
+              title="Pan South [Key: S / ↓]"
+              aria-label="Pan camera south"
+              className="w-7 h-7 rounded-lg glass-card flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--primary-bg)] transition cursor-pointer"
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         <button
           onClick={() => {
@@ -193,7 +317,7 @@ export const GoogleEarthNavControls: React.FC<GoogleEarthNavControlsProps> = ({
             tacticalAudio.playBlip();
             onRecenter();
           }}
-          title="Recenter Camera on Jezero Crater"
+          title="Recenter Camera on Jezero Crater [Key: Space / Home]"
           className="glass-control-btn !w-10 !h-8"
         >
           <RotateCcw className="w-3.5 h-3.5" />

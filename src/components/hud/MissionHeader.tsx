@@ -119,10 +119,10 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
   let subPillAlign = 'left-4';
   if (operationMode === 'screen' && !isSidebarCollapsed) {
     if (dockSide === 'left') {
-      horizontalBounds = 'left-4 lg:left-[418px] xl:left-[448px] 2xl:left-[472px] right-4';
-      subPillAlign = 'left-4 lg:left-[418px] xl:left-[448px] 2xl:left-[472px]';
+      horizontalBounds = 'left-4 md:left-[412px] xl:left-[448px] 2xl:left-[472px] right-4';
+      subPillAlign = 'left-4 md:left-[412px] xl:left-[448px] 2xl:left-[472px]';
     } else {
-      horizontalBounds = 'left-4 right-4 lg:right-[418px] xl:right-[448px] 2xl:right-[472px]';
+      horizontalBounds = 'left-4 right-4 md:right-[412px] xl:right-[448px] 2xl:right-[472px]';
       subPillAlign = 'left-4';
     }
   }
@@ -136,10 +136,10 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
   return (
     <>
       <header
-        className={`absolute top-4 ${horizontalBounds} h-16 z-30 glass-panel rounded-[22px] px-3 sm:px-4 flex items-center justify-between gap-2 sm:gap-3 pointer-events-auto select-none font-sans transition-all duration-300 ease-out`}
+        className={`absolute top-4 ${horizontalBounds} h-16 z-30 glass-panel rounded-[22px] px-2.5 sm:px-3.5 flex items-center justify-between gap-1.5 sm:gap-2.5 pointer-events-auto select-none font-sans transition-all duration-300 ease-out`}
       >
         {/* Left Telemetry Cluster: Live Sol Badge + Search Capsule */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink">
           {/* Live Status Badge */}
           <div
             className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border"
@@ -157,12 +157,12 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
             />
             <span className="font-mono whitespace-nowrap">
               SOL 1320
-              <span className="hidden xl:inline"> · {formatTime(lmstSeconds)}</span>
+              <span className="hidden 2xl:inline"> · {formatTime(lmstSeconds)}</span>
             </span>
           </div>
 
           {/* Search Waypoint Capsule (Flux signature) */}
-          <div ref={searchWrapRef} className="relative w-28 sm:w-36 md:w-44 lg:w-40 xl:w-56 min-w-[90px] sm:min-w-[120px] shrink">
+          <div ref={searchWrapRef} className="relative w-24 sm:w-28 md:w-36 lg:w-32 xl:w-44 min-w-[70px] sm:min-w-[90px] shrink">
             <div className="glass-card rounded-full px-2.5 sm:px-3 h-9 flex items-center gap-1.5 sm:gap-2 focus-within:ring-2 focus-within:ring-[var(--primary)]">
               <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <input
@@ -246,7 +246,7 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
             <Wind className="w-3.5 h-3.5 animate-soft-pulse shrink-0" />
             <span className="font-mono whitespace-nowrap">
               -29°C
-              <span className="hidden xl:inline"> · 8.4 m/s</span>
+              <span className="hidden 2xl:inline"> · 8.4 m/s</span>
             </span>
             <span
               className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full animate-ping shrink-0"

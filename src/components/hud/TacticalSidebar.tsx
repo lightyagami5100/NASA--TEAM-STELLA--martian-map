@@ -1200,8 +1200,8 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
         </label>
       </div>
 
-      {/* Terrain Mesh Source */}
-      <div className="glass-card p-4 flex flex-col gap-2">
+      {/* Terrain Mesh Source & Ambiguity Resolution */}
+      <div className="glass-card p-4 flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <div className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
             <Box className="w-4 h-4" style={{ color: 'var(--primary)' }} />
@@ -1215,7 +1215,31 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
                 : 'High-Res Shader DEM Plane'}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 pt-1">
+
+        {/* Scientific Context Description Pill */}
+        <div className="text-[11px] leading-relaxed p-2.5 rounded-xl bg-[var(--bg-glass-inset)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
+          {terrainSource === 'dem-plane' && (
+            <span>
+              <strong className="text-[var(--text-primary)] font-bold">USGS / HiRISE DEM Plane (10m Grid):</strong> Operational mathematical continuous elevation model. Powers real-time GLSL dynamic slope hazard shaders, THEMIS sand traps, and continuous A* kinematic routing.
+            </span>
+          )}
+          {terrainSource === 'nasa-stl' && (
+            <span>
+              <strong className="text-[var(--text-primary)] font-bold">NASA Mars Trek STL (323K Triangles):</strong> Official NASA JPL physical 3D print mesh. Watertight manifold geometry calibrated with 2.8x mission vertical exaggeration for tactile scale modeling.
+            </span>
+          )}
+          {terrainSource === 'nasa-obj' && (
+            <span>
+              <strong className="text-[var(--text-primary)] font-bold">NASA Mars Trek OBJ (970K Vertices):</strong> NASA JPL surface photogrammetry point cloud. High-density polygonization showing Jezero delta front and HiRISE optical surface albedo.
+            </span>
+          )}
+          <div className="mt-1 text-[10px] text-[var(--primary)] font-semibold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0" />
+            <span>Calibrated to 2.8x vertical mission exaggeration (Kodiak Butte peak @ -2410m, Delta Scarp @ -2480m).</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
           <button
             onClick={() => {
               tacticalAudio.playBlip();

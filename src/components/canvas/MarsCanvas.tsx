@@ -15,7 +15,20 @@ import {
 import { Globe, Crosshair, RotateCcw, ArrowDownRight } from 'lucide-react';
 
 export interface CameraNavAction {
-  type: 'zoomIn' | 'zoomOut' | 'tiltUp' | 'tiltDown' | 'resetNorth' | 'recenter' | 'rotateHeading';
+  type:
+    | 'zoomIn'
+    | 'zoomOut'
+    | 'tiltUp'
+    | 'tiltDown'
+    | 'resetNorth'
+    | 'recenter'
+    | 'rotateHeading'
+    | 'panNorth'
+    | 'panSouth'
+    | 'panWest'
+    | 'panEast'
+    | 'orbitLeft'
+    | 'orbitRight';
   payload?: number;
   id: number;
 }
@@ -843,6 +856,91 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     return to3DHeight(getJezeroElevation(x, -z));
   };
 
+  // Real-Time Keyboard Navigation Flight Physics
+  const keysDownRef = useRef<Set<string>>(new Set());
+  const [activeKeys, setActiveKeys] = useState<string[]>([]);
+  const panVelocityRef = useRef(new THREE.Vector3(0, 0, 0));
+  const orbitVelocityRef = useRef(0);
+  const zoomVelocityRef = useRef(0);
+
+  // Global Flight Keyboard Controls Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox')
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      const validFlightKeys = [
+        'w',
+        'a',
+        's',
+        'd',
+        'arrowup',
+        'arrowdown',
+        'arrowleft',
+        'arrowright',
+        'q',
+        'e',
+        'r',
+        'f',
+        '+',
+        '=',
+        '-',
+        '_',
+        ' ',
+      ];
+
+      if (validFlightKeys.includes(key)) {
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+          e.preventDefault();
+        }
+        keysDownRef.current.add(key);
+        setActiveKeys(Array.from(keysDownRef.current));
+      }
+
+      // Space / Home Recenter Command
+      if (key === ' ' || e.key === 'Home') {
+        e.preventDefault();
+        if (controlsRef.current && cameraRef.current) {
+          const targetWp = selectedWaypoint || waypoints[0];
+          if (targetWp) {
+            const groundY = getGroundElevationAt(targetWp.x, -targetWp.y);
+            controlsRef.current.target.set(targetWp.x, groundY, -targetWp.y);
+            cameraRef.current.position.set(targetWp.x + 90, groundY + 95, -targetWp.y + 130);
+            controlsRef.current.update();
+            tacticalAudio.playBlip();
+          } else {
+            controlsRef.current.target.set(0, 30, 0);
+            cameraRef.current.position.set(220, 260, 340);
+            controlsRef.current.update();
+            tacticalAudio.playBlip();
+          }
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      keysDownRef.current.delete(key);
+      setActiveKeys(Array.from(keysDownRef.current));
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [selectedWaypoint, waypoints]);
+
   // 1. Scene, GLSL Material, Camera, Lighting & Terrain Setup
   useEffect(() => {
     if (!containerRef.current) return;
@@ -967,7 +1065,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
         stlGeom.rotateX(-Math.PI / 2);
 
         const scaleFactor = 1000 / 399;
-        const scaleY = 2.4;
+        // Calibrate vertical relief to 2.8x mission exaggeration (matching DEM plane)
+        const scaleY = 24.17;
         stlGeom.scale(scaleFactor, scaleY, scaleFactor);
 
         const pos = stlGeom.attributes.position;
@@ -984,7 +1083,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
         const stlMesh = new THREE.Mesh(stlGeom, shaderMat);
         stlMesh.receiveShadow = true;
         stlMesh.castShadow = true;
-        stlMesh.position.set(0, -26.5, 0);
+        // Aligned with DEM elevation datum so crater floor is at Y~7.6 and Kodiak Butte at Y~64.6
+        stlMesh.position.set(0, -320.9, 0);
         stlMesh.visible = false;
         stlMeshRef.current = stlMesh;
         scene.add(stlMesh);
@@ -1018,7 +1118,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
           objGeom.rotateX(-Math.PI / 2);
 
           const scaleFactor = 1000 / 399;
-          const scaleY = 2.4;
+          // Calibrate vertical relief to match mission DEM plane
+          const scaleY = 22.0;
           objGeom.scale(scaleFactor, scaleY, scaleFactor);
 
           // Compute normalized [0, 1] planar UV coordinates for GLSL multi-layer shader
@@ -1036,8 +1137,8 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
           const objMesh = new THREE.Mesh(objGeom, shaderMat);
           objMesh.receiveShadow = true;
           objMesh.castShadow = true;
-          // Aligned with NASA Mars Trek datum elevation (-23.5)
-          objMesh.position.set(0, -23.5, 0);
+          // Calibrated elevation matching DEM crater floor (Y ~ 7.6) and Kodiak Butte (Y ~ 65)
+          objMesh.position.set(0, -290.0, 0);
           objMesh.visible = false;
           objMeshRef.current = objMesh;
           scene.add(objMesh);
@@ -1115,6 +1216,47 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
       // Update shader time uniform for animated sand hazards & hazard grid pulses
       if (terrainMaterialRef.current) {
         terrainMaterialRef.current.uniforms.uTime.value = elapsed;
+      }
+
+      // Interactive Flight Keyboard Navigation Physics & Velocity Integration
+      if (cameraModeRef.current !== 'rover' && cameraModeRef.current !== 'visor' && cameraModeRef.current !== 'globe') {
+        const cam = camera;
+        const target = controls.target;
+        const forward = new THREE.Vector3().subVectors(target, cam.position);
+        forward.y = 0;
+        if (forward.lengthSq() > 0.0001) forward.normalize();
+        const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        const keys = keysDownRef.current;
+        const accel = 2.4;
+        if (keys.has('w') || keys.has('arrowup')) panVelocityRef.current.addScaledVector(forward, accel);
+        if (keys.has('s') || keys.has('arrowdown')) panVelocityRef.current.addScaledVector(forward, -accel);
+        if (keys.has('a') || keys.has('arrowleft')) panVelocityRef.current.addScaledVector(right, -accel);
+        if (keys.has('d') || keys.has('arrowright')) panVelocityRef.current.addScaledVector(right, accel);
+        if (keys.has('q')) orbitVelocityRef.current += 0.026;
+        if (keys.has('e')) orbitVelocityRef.current -= 0.026;
+        if (keys.has('r') || keys.has('=') || keys.has('+')) zoomVelocityRef.current += 2.6;
+        if (keys.has('f') || keys.has('-') || keys.has('_')) zoomVelocityRef.current -= 2.6;
+
+        if (panVelocityRef.current.lengthSq() > 0.001) {
+          controls.target.add(panVelocityRef.current);
+          cam.position.add(panVelocityRef.current);
+          panVelocityRef.current.multiplyScalar(0.86);
+        }
+        if (Math.abs(orbitVelocityRef.current) > 0.0001) {
+          const offset = cam.position.clone().sub(controls.target);
+          offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), orbitVelocityRef.current);
+          cam.position.copy(controls.target).add(offset);
+          orbitVelocityRef.current *= 0.86;
+        }
+        if (Math.abs(zoomVelocityRef.current) > 0.01) {
+          const offset = cam.position.clone().sub(controls.target);
+          const dist = offset.length();
+          const newDist = Math.max(35, Math.min(1200, dist - zoomVelocityRef.current));
+          offset.setLength(newDist);
+          cam.position.copy(controls.target).add(offset);
+          zoomVelocityRef.current *= 0.86;
+        }
       }
 
       // Camera Altitude Clamp
@@ -1367,6 +1509,18 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
     } else if (type === 'zoomOut') {
       camera.position.sub(controls.target).multiplyScalar(1.25).add(controls.target);
       controls.update();
+    } else if (type === 'panNorth') {
+      panVelocityRef.current.z -= 24;
+    } else if (type === 'panSouth') {
+      panVelocityRef.current.z += 24;
+    } else if (type === 'panWest') {
+      panVelocityRef.current.x -= 24;
+    } else if (type === 'panEast') {
+      panVelocityRef.current.x += 24;
+    } else if (type === 'orbitLeft') {
+      orbitVelocityRef.current += 0.32;
+    } else if (type === 'orbitRight') {
+      orbitVelocityRef.current -= 0.32;
     } else if (type === 'tiltUp') {
       const offset = camera.position.clone().sub(controls.target);
       const radius = offset.length();
@@ -1933,6 +2087,36 @@ export const MarsCanvas: React.FC<MarsCanvasProps> = ({
             <ArrowDownRight className="w-4 h-4" />
             <span>Descend to Jezero Surface (3D)</span>
           </button>
+        </div>
+      )}
+
+      {/* 5. Fluid Keyboard Flight Controls HUD Indicator */}
+      {cameraMode !== 'globe' && (
+        <div className="absolute bottom-6 left-6 z-20 hidden md:flex items-center gap-2.5 glass-panel px-3.5 py-2 rounded-2xl text-[11px] font-mono select-none text-[var(--text-secondary)] shadow-xl border border-[var(--border-subtle)] backdrop-blur-xl">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
+            <span className="text-[10px] uppercase font-bold text-[var(--text-primary)] tracking-wider">Flight Keys</span>
+          </div>
+          <span className="text-[var(--text-tertiary)]">·</span>
+          <div className="flex items-center gap-1">
+            <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${activeKeys.some(k => ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) ? 'bg-[var(--primary)] text-white shadow-sm scale-105' : 'bg-[var(--bg-glass-inset)] border border-[var(--border-subtle)] text-[var(--text-primary)]'}`}>WASD / ↑↓←→</kbd>
+            <span className="text-[10px]">Pan</span>
+          </div>
+          <span className="text-[var(--text-tertiary)]">·</span>
+          <div className="flex items-center gap-1">
+            <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${activeKeys.some(k => ['q','e'].includes(k)) ? 'bg-[var(--primary)] text-white shadow-sm scale-105' : 'bg-[var(--bg-glass-inset)] border border-[var(--border-subtle)] text-[var(--text-primary)]'}`}>Q / E</kbd>
+            <span className="text-[10px]">Orbit</span>
+          </div>
+          <span className="text-[var(--text-tertiary)]">·</span>
+          <div className="flex items-center gap-1">
+            <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${activeKeys.some(k => ['r','f','+','-','='].includes(k)) ? 'bg-[var(--primary)] text-white shadow-sm scale-105' : 'bg-[var(--bg-glass-inset)] border border-[var(--border-subtle)] text-[var(--text-primary)]'}`}>R / F</kbd>
+            <span className="text-[10px]">Zoom</span>
+          </div>
+          <span className="text-[var(--text-tertiary)]">·</span>
+          <div className="flex items-center gap-1">
+            <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${activeKeys.includes(' ') ? 'bg-[var(--primary)] text-white shadow-sm scale-105' : 'bg-[var(--bg-glass-inset)] border border-[var(--border-subtle)] text-[var(--text-primary)]'}`}>Space</kbd>
+            <span className="text-[10px]">Center</span>
+          </div>
         </div>
       )}
     </div>
