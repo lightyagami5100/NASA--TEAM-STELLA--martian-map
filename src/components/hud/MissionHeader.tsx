@@ -118,10 +118,10 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
   let subPillAlign = 'left-4';
   if (!isSidebarCollapsed) {
     if (dockSide === 'left') {
-      horizontalBounds = 'left-4 lg:left-[472px] right-4';
-      subPillAlign = 'left-4 lg:left-[472px]';
+      horizontalBounds = 'left-4 lg:left-[418px] xl:left-[448px] 2xl:left-[472px] right-4';
+      subPillAlign = 'left-4 lg:left-[418px] xl:left-[448px] 2xl:left-[472px]';
     } else {
-      horizontalBounds = 'left-4 right-4 lg:right-[472px]';
+      horizontalBounds = 'left-4 right-4 lg:right-[418px] xl:right-[448px] 2xl:right-[472px]';
       subPillAlign = 'left-4';
     }
   }
@@ -135,29 +135,34 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
   return (
     <>
       <header
-        className={`absolute top-4 ${horizontalBounds} h-16 z-30 glass-panel rounded-[22px] px-4 flex items-center justify-between gap-3 pointer-events-auto select-none font-sans transition-all duration-300 ease-out`}
+        className={`absolute top-4 ${horizontalBounds} h-16 z-30 glass-panel rounded-[22px] px-3 sm:px-4 flex items-center justify-between gap-2 sm:gap-3 pointer-events-auto select-none font-sans transition-all duration-300 ease-out`}
       >
         {/* Left Telemetry Cluster: Live Sol Badge + Search Capsule */}
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
           {/* Live Status Badge */}
           <div
-            className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border"
             style={{
               background: 'var(--safe-bg)',
               color: 'var(--safe)',
               borderColor: 'var(--safe-border)',
             }}
+            title="Martian Local Solar Time (LMST)"
+            aria-label="Sol 1320 Mission Elapsed Time"
           >
             <span
-              className="w-2 h-2 rounded-full animate-pulse"
+              className="w-2 h-2 rounded-full animate-pulse shrink-0"
               style={{ backgroundColor: 'var(--safe-bright)' }}
             />
-            <span className="font-mono">SOL 1320 · {formatTime(lmstSeconds)}</span>
+            <span className="font-mono whitespace-nowrap">
+              SOL 1320
+              <span className="hidden xl:inline"> · {formatTime(lmstSeconds)}</span>
+            </span>
           </div>
 
           {/* Search Waypoint Capsule (Flux signature) */}
-          <div ref={searchWrapRef} className="relative flex-1 max-w-xs min-w-[150px]">
-            <div className="glass-card rounded-full px-3 h-9 flex items-center gap-2 focus-within:ring-2 focus-within:ring-[var(--primary)]">
+          <div ref={searchWrapRef} className="relative w-28 sm:w-36 md:w-44 lg:w-40 xl:w-56 min-w-[90px] sm:min-w-[120px] shrink">
+            <div className="glass-card rounded-full px-2.5 sm:px-3 h-9 flex items-center gap-1.5 sm:gap-2 focus-within:ring-2 focus-within:ring-[var(--primary)]">
               <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
               <input
                 type="text"
@@ -167,13 +172,14 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   setSearchTerm(e.target.value);
                   setSearchFocused(true);
                 }}
-                placeholder="Jump to Jezero site..."
-                className="bg-transparent border-none outline-none w-full text-xs font-semibold placeholder:text-[var(--text-tertiary)] text-[var(--text-primary)]"
+                placeholder="Jump site..."
+                className="bg-transparent border-none outline-none w-full text-xs font-semibold placeholder:text-[var(--text-tertiary)] text-[var(--text-primary)] min-w-0"
+                aria-label="Search Jezero crater waypoint"
               />
               {searchTerm ? (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer"
+                  className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] cursor-pointer shrink-0"
                   aria-label="Clear site search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -220,32 +226,36 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
         </div>
 
         {/* Right Action & Safety Telemetry Pills */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 min-w-0 shrink flex-nowrap overflow-x-auto scrollbar-none py-1">
           {/* Weather & Dust Devil Alert Pill */}
           <button
             onClick={() => {
               tacticalAudio.playBlip();
               onOpenWeather();
             }}
-            className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition hover:-translate-y-0.5 border"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition hover:-translate-y-0.5 border shrink-0"
             style={{
               background: 'var(--warn-bg)',
               color: 'var(--warn)',
               borderColor: 'var(--warn-border)',
             }}
-            title="Open NASA MEDA Atmospheric & Dust Devil Suite"
+            title="Open NASA MEDA Atmospheric & Dust Devil Suite (-29°C · Wind 8.4 m/s)"
+            aria-label="Open NASA MEDA Atmospheric Weather Suite"
           >
-            <Wind className="w-3.5 h-3.5 animate-soft-pulse" />
-            <span className="font-mono">-29°C · 8.4 m/s</span>
+            <Wind className="w-3.5 h-3.5 animate-soft-pulse shrink-0" />
+            <span className="font-mono whitespace-nowrap">
+              -29°C
+              <span className="hidden xl:inline"> · 8.4 m/s</span>
+            </span>
             <span
-              className="w-2 h-2 rounded-full animate-ping"
+              className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full animate-ping shrink-0"
               style={{ backgroundColor: 'var(--danger-bright)' }}
             />
           </button>
 
           {/* Radiation + MRO Relay Pill */}
           <div
-            className="hidden xl:flex items-center gap-2.5 px-3 py-1.5 rounded-xl glass-card text-xs font-semibold"
+            className="hidden 2xl:flex items-center gap-2.5 px-3 py-1.5 rounded-xl glass-card text-xs font-semibold shrink-0"
             title="MSL RAD Flux & Mars Reconnaissance Orbiter Link"
           >
             <span className="flex items-center gap-1 font-mono text-[var(--text-primary)]">
@@ -264,21 +274,23 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
 
           {/* 3 Operational UI Modes Switcher (Screen / Tablet / Visor) */}
           {onChangeOperationMode && (
-            <div className="flex items-center gap-1 p-1 rounded-2xl glass-card border border-[var(--border-subtle)] shadow-sm">
+            <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-2xl glass-card border border-[var(--border-subtle)] shadow-xs shrink-0" role="group" aria-label="Operational UI Modes">
               <button
                 onClick={() => {
                   tacticalAudio.playBlip();
                   onChangeOperationMode('screen');
                 }}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2 sm:px-2.5 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   operationMode === 'screen'
                     ? 'apple-btn-primary text-white shadow-md'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Habitat Workstation / Mission Console [Key: 1]"
+                aria-label="Screen Mode: Mission Control Workstation (Key 1)"
+                aria-pressed={operationMode === 'screen'}
               >
-                <Monitor className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Screen</span>
+                <Monitor className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xl:inline">Screen</span>
               </button>
 
               <button
@@ -286,15 +298,17 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   tacticalAudio.playBlip();
                   onChangeOperationMode('tablet');
                 }}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2 sm:px-2.5 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   operationMode === 'tablet'
                     ? 'bg-amber-500 text-slate-950 font-extrabold shadow-md shadow-amber-500/30'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Astronaut EVA Field Slate / PDU [Key: 2]"
+                aria-label="Tablet Mode: Astronaut EVA Field Slate (Key 2)"
+                aria-pressed={operationMode === 'tablet'}
               >
-                <Tablet className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tablet</span>
+                <Tablet className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xl:inline">Tablet</span>
               </button>
 
               <button
@@ -302,15 +316,17 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   tacticalAudio.playBlip();
                   onChangeOperationMode('visor');
                 }}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2 sm:px-2.5 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   operationMode === 'visor'
                     ? 'bg-emerald-500 text-slate-950 font-extrabold shadow-md shadow-emerald-500/30'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title="xEMU Helmet Visor Heads-Up Display (1.8m Eye-Level) [Key: 3]"
+                aria-label="Visor Mode: Spacesuit Helmet HUD (Key 3)"
+                aria-pressed={operationMode === 'visor'}
               >
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Visor</span>
+                <Eye className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xl:inline">Visor</span>
               </button>
             </div>
           )}
@@ -322,15 +338,17 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                 tacticalAudio.playBlip();
                 onToggleVisorFilter();
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition border ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition border shrink-0 ${
                 isVisorFilter
                   ? 'apple-btn-primary text-white border-transparent'
                   : 'glass-card text-[var(--text-primary)]'
               }`}
               title="Toggle Polarized Helmet Visor Filter"
+              aria-label="Toggle Polarized Helmet Visor Scanlines"
+              aria-pressed={isVisorFilter}
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isVisorFilter ? 'Visor On' : 'Visor'}</span>
+              <Eye className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden 2xl:inline">{isVisorFilter ? 'Visor On' : 'Visor'}</span>
             </button>
           )}
 
@@ -341,18 +359,19 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                 tacticalAudio.playBlip();
                 onOpenLiveFeed();
               }}
-              className="px-3 py-1.5 rounded-xl glass-card text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 cursor-pointer transition border border-blue-500/20 hover:border-blue-500/40"
+              className="hidden sm:inline-flex px-2.5 sm:px-3 py-1.5 rounded-xl glass-card text-xs font-bold text-blue-600 dark:text-blue-400 items-center gap-1.5 cursor-pointer transition border border-blue-500/20 hover:border-blue-500/40 shrink-0"
               title="Open Perseverance Live DSN Telemetry & Hazcam Feed"
+              aria-label="Open Perseverance Live Telemetry and Hazcam Feed"
             >
-              <Radio className="w-3.5 h-3.5 animate-pulse text-blue-500" />
-              <span className="hidden lg:inline">Live Rover</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              <Radio className="w-3.5 h-3.5 animate-pulse text-blue-500 shrink-0" />
+              <span className="hidden 2xl:inline">Live Rover</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
             </button>
           )}
 
           {/* Diurnal Lighting Mode (Day / Sunset / Night) */}
           {onChangeTimeOfDay && (
-            <div className="flex items-center gap-0.5 p-0.5 rounded-xl glass-card text-xs border border-[var(--border-subtle)]">
+            <div className="hidden md:flex items-center gap-0.5 p-0.5 rounded-xl glass-card text-xs border border-[var(--border-subtle)] shrink-0" role="group" aria-label="Sun and Sky Lighting">
               <button
                 onClick={() => {
                   tacticalAudio.playBlip();
@@ -362,9 +381,11 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   timeOfDay === 'day' ? 'apple-btn-primary text-white shadow-xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Martian Midday (14:39 LMST) - High Sun"
+                aria-label="Set Midday Lighting"
+                aria-pressed={timeOfDay === 'day'}
               >
-                <Sun className="w-3 h-3" />
-                <span className="hidden xl:inline">Day</span>
+                <Sun className="w-3 h-3 shrink-0" />
+                <span className="hidden 2xl:inline">Day</span>
               </button>
               <button
                 onClick={() => {
@@ -375,9 +396,11 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   timeOfDay === 'sunset' ? 'apple-btn-primary text-white shadow-xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Martian Twilight (18:15 LMST) - Blue Sunset"
+                aria-label="Set Sunset Lighting"
+                aria-pressed={timeOfDay === 'sunset'}
               >
-                <Sunset className="w-3 h-3" />
-                <span className="hidden xl:inline">Dusk</span>
+                <Sunset className="w-3 h-3 shrink-0" />
+                <span className="hidden 2xl:inline">Dusk</span>
               </button>
               <button
                 onClick={() => {
@@ -388,9 +411,11 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
                   timeOfDay === 'night' ? 'apple-btn-primary text-white shadow-xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Martian Night (22:45 LMST) - Phobos Moon & Stars"
+                aria-label="Set Night Lighting"
+                aria-pressed={timeOfDay === 'night'}
               >
-                <Moon className="w-3 h-3" />
-                <span className="hidden xl:inline">Night</span>
+                <Moon className="w-3 h-3 shrink-0" />
+                <span className="hidden 2xl:inline">Night</span>
               </button>
             </div>
           )}
@@ -401,11 +426,12 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
               tacticalAudio.playBlip();
               onOpenBrief();
             }}
-            className="px-3 py-1.5 rounded-xl glass-card text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5 cursor-pointer transition"
-            title="Open NASA Mission Brief & Datasets"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl glass-card text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5 cursor-pointer transition shrink-0"
+            title="Open NASA Mission Guide & Challenge Rubrics"
+            aria-label="Open NASA Mission Guide and Datasets"
           >
-            <Info className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
-            <span className="hidden sm:inline">Mission Guide</span>
+            <Info className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--primary)' }} />
+            <span className="hidden xl:inline">Mission Guide</span>
           </button>
 
           {/* Left/Right Handedness Dock Switcher */}
@@ -414,43 +440,43 @@ export const MissionHeader: React.FC<MissionHeaderProps> = ({
               tacticalAudio.playBlip();
               onToggleDockSide();
             }}
-            className="w-9 h-9 rounded-full glass-card flex items-center justify-center cursor-pointer text-[var(--text-primary)]"
-            title={dockSide === 'left' ? 'Move Dashboard to Right Side' : 'Move Dashboard to Left Side'}
-            aria-label="Switch dashboard side"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full glass-card flex items-center justify-center cursor-pointer text-[var(--text-primary)] shrink-0 transition hover:bg-[var(--primary-bg)]"
+            title={dockSide === 'left' ? 'Dock Dashboard to Right' : 'Dock Dashboard to Left'}
+            aria-label="Switch Dashboard Docking Side"
           >
             {dockSide === 'left' ? (
-              <PanelRightClose className="w-4 h-4" />
+              <PanelRightClose className="w-4 h-4 shrink-0" />
             ) : (
-              <PanelLeftClose className="w-4 h-4" />
+              <PanelLeftClose className="w-4 h-4 shrink-0" />
             )}
           </button>
 
-          {/* Light / Dark Liquid Glass Theme Toggle */}
+          {/* Light / Dark Theme Toggle */}
           {onToggleTheme && (
             <button
               onClick={() => {
                 tacticalAudio.playBlip();
                 onToggleTheme();
               }}
-              className="w-9 h-9 rounded-full glass-card flex items-center justify-center cursor-pointer text-[var(--text-primary)]"
-              title={theme === 'light' ? 'Switch to Space Dark Glass' : 'Switch to Quartz Light Glass'}
-              aria-label="Toggle Glass Theme"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full glass-card flex items-center justify-center cursor-pointer text-[var(--text-primary)] shrink-0 transition hover:bg-[var(--primary-bg)]"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              aria-label="Toggle Color Theme"
             >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              {theme === 'light' ? <Moon className="w-4 h-4 shrink-0" /> : <Sun className="w-4 h-4 shrink-0" />}
             </button>
           )}
 
           {/* Sound Toggle */}
           <button
             onClick={toggleSound}
-            className="w-9 h-9 rounded-full glass-card flex items-center justify-center cursor-pointer text-[var(--text-primary)]"
-            title={isMuted ? 'Unmute Telemetry Audio' : 'Mute Telemetry Audio'}
-            aria-label="Toggle Sound"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full glass-card flex items-center justify-center cursor-pointer text-[var(--text-primary)] shrink-0 transition hover:bg-[var(--primary-bg)]"
+            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+            aria-label={isMuted ? 'Unmute Mission Audio' : 'Mute Mission Audio'}
           >
             {isMuted ? (
-              <VolumeX className="w-4 h-4 text-[var(--text-tertiary)]" />
+              <VolumeX className="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
             ) : (
-              <Volume2 className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+              <Volume2 className="w-4 h-4 shrink-0" style={{ color: 'var(--primary)' }} />
             )}
           </button>
         </div>

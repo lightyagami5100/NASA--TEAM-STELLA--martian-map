@@ -12,6 +12,7 @@ export function sanitizeInput(input: unknown): string {
   }
 
   // 1. Strip ASCII control characters and non-printable bytes (except standard whitespace)
+  // eslint-disable-next-line no-control-regex
   let clean = input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
   // 2. Neutralize dangerous script pseudo-protocols
@@ -29,7 +30,7 @@ export function sanitizeInput(input: unknown): string {
     '=': '&#x3D;',
   };
 
-  return clean.replace(/[&<>"'`=\/]/g, (char) => htmlMap[char] || char).trim();
+  return clean.replace(/[&<>"'`=/]/g, (char) => htmlMap[char] || char).trim();
 }
 
 /**
