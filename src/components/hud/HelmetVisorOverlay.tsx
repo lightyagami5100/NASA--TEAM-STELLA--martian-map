@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Waypoint, PathResult } from '../../types/mars';
 import {
   Activity,
@@ -11,6 +11,8 @@ import {
   Tablet,
   Mic,
   Sun,
+  Eye,
+  LogOut,
 } from 'lucide-react';
 import { tacticalAudio } from '../../utils/audio';
 
@@ -37,6 +39,26 @@ export const HelmetVisorOverlay: React.FC<HelmetVisorOverlayProps> = ({
 }) => {
   const [isGoldVisorDown, setIsGoldVisorDown] = useState(false);
   const [voiceQueryStatus, setVoiceQueryStatus] = useState<'standby' | 'listening' | 'acknowledged'>('standby');
+
+  // Global Keyboard Shortcuts: Escape / 1 / 2 immediately exits or switches modes
+  useEffect(() => {
+    if (!active) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        tacticalAudio.playBlip();
+        onExitVisor();
+      } else if (e.key === '1' && onSwitchToScreen) {
+        tacticalAudio.playBlip();
+        onSwitchToScreen();
+      } else if (e.key === '2' && onSwitchToTablet) {
+        tacticalAudio.playBlip();
+        onSwitchToTablet();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [active, onExitVisor, onSwitchToScreen, onSwitchToTablet]);
+
   if (!active) return null;
 
   // Normalized heading in degrees [0, 360)
@@ -298,27 +320,83 @@ export const HelmetVisorOverlay: React.FC<HelmetVisorOverlayProps> = ({
         <div className="absolute inset-0 bg-amber-500/20 mix-blend-color-burn pointer-events-none transition-all duration-500" />
       )}
 
-      {/* Top Right Quick Controls: Gold Visor Toggle */}
-      <div className="absolute top-14 right-8 flex items-center gap-2 pointer-events-auto z-10">
+      {/* Top Right Quick Controls: Mode Navigation & Exit Visor Island */}
+      <div className="absolute top-4 right-6 flex items-center gap-2.5 pointer-events-auto z-50 font-mono">
+        {/* Operational Mode Toggle Pill */}
+        <div className="glass-panel p-1 rounded-2xl flex items-center gap-1 border border-white/20 shadow-2xl bg-slate-950/85 backdrop-blur-xl">
+          <button
+            onClick={() => {
+              tacticalAudio.playBlip();
+              if (onSwitchToScreen) onSwitchToScreen();
+              else onExitVisor();
+            }}
+            className="px-3 py-1.5 rounded-xl font-bold text-xs text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer flex items-center gap-1.5"
+            title="Return to Habitat Workstation Console [Key: 1]"
+            aria-label="Switch to Console Screen mode"
+          >
+            <Monitor className="w-3.5 h-3.5 text-sky-400" />
+            <span className="hidden sm:inline">Screen</span>
+          </button>
+
+          {onSwitchToTablet && (
+            <button
+              onClick={() => {
+                tacticalAudio.playBlip();
+                onSwitchToTablet();
+              }}
+              className="px-3 py-1.5 rounded-xl font-bold text-xs text-slate-300 hover:text-amber-300 hover:bg-amber-500/15 transition cursor-pointer flex items-center gap-1.5"
+              title="Switch to Astronaut EVA Field Slate [Key: 2]"
+              aria-label="Switch to EVA Tablet mode"
+            >
+              <Tablet className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Tablet</span>
+            </button>
+          )}
+
+          <div
+            className="px-3 py-1.5 rounded-xl font-extrabold text-xs bg-emerald-500 text-slate-950 flex items-center gap-1.5 shadow-md shadow-emerald-500/30"
+            title="Currently Active: Spacesuit Helmet Visor HUD [Key: 3]"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Visor</span>
+          </div>
+        </div>
+
+        {/* Gold Visor Shade Toggle */}
         <button
           onClick={() => {
             tacticalAudio.playBlip();
             setIsGoldVisorDown(!isGoldVisorDown);
           }}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold font-mono flex items-center gap-1.5 transition-all shadow-lg border ${
+          className={`px-3 py-2 rounded-2xl text-xs font-bold font-mono flex items-center gap-1.5 transition-all shadow-xl border cursor-pointer ${
             isGoldVisorDown
               ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-amber-500/30'
-              : 'bg-black/60 text-amber-300 border-amber-500/40 hover:bg-black/80'
+              : 'glass-panel bg-slate-950/85 text-amber-300 border-amber-500/30 hover:bg-slate-900'
           }`}
-          title="Lower/Raise NASA Gold Anti-Glare Visor Shade"
+          title="Toggle NASA Gold Anti-Glare Visor Shade"
+          aria-label="Toggle gold visor shade"
         >
           <Sun className="w-3.5 h-3.5" />
-          <span>{isGoldVisorDown ? 'Gold Visor Active' : 'Gold Shade'}</span>
+          <span className="hidden md:inline">{isGoldVisorDown ? 'Gold Active' : 'Gold Shade'}</span>
+        </button>
+
+        {/* High-Visibility Exit Visor Button */}
+        <button
+          onClick={() => {
+            tacticalAudio.playBlip();
+            onExitVisor();
+          }}
+          className="px-3.5 py-2 rounded-2xl font-bold text-xs bg-rose-500 hover:bg-rose-600 text-white flex items-center gap-1.5 shadow-lg shadow-rose-500/30 transition cursor-pointer active:scale-95 border border-rose-400"
+          title="Exit Helmet Visor HUD Mode [Key: Esc]"
+          aria-label="Exit Helmet Visor HUD Mode"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Exit Visor (Esc)</span>
         </button>
       </div>
 
-      {/* 6. Bottom Center: Voice Simulator, Mode Switchers & Mission Status */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row items-center gap-2.5 pointer-events-auto">
+      {/* Floating Tactical Voice Simulator (Positioned Cleanly Above Timeline Scrubber) */}
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-2.5 pointer-events-auto z-30">
         <button
           onClick={() => {
             tacticalAudio.playBlip();
@@ -326,14 +404,14 @@ export const HelmetVisorOverlay: React.FC<HelmetVisorOverlayProps> = ({
               prev === 'standby' ? 'listening' : prev === 'listening' ? 'acknowledged' : 'standby'
             );
           }}
-          className={`px-3.5 py-1.5 glass-panel rounded-full text-[11px] font-mono flex items-center gap-2 shadow-lg border transition-all cursor-pointer ${
+          className={`px-4 py-2 glass-panel rounded-full text-[11px] font-mono flex items-center gap-2 shadow-2xl border transition-all cursor-pointer backdrop-blur-xl ${
             voiceQueryStatus === 'listening'
-              ? 'border-sky-400 bg-sky-950/60 text-sky-200 ring-2 ring-sky-400/40'
+              ? 'border-sky-400 bg-sky-950/80 text-sky-200 ring-2 ring-sky-400/50 scale-102'
               : voiceQueryStatus === 'acknowledged'
-              ? 'border-emerald-400 bg-emerald-950/60 text-emerald-200'
-              : 'border-white/10 text-slate-200 hover:bg-slate-900/60'
+              ? 'border-emerald-400 bg-emerald-950/80 text-emerald-200'
+              : 'border-white/20 bg-slate-950/80 text-slate-200 hover:bg-slate-900'
           }`}
-          title="Click to toggle xEMU Voice Radio Comm"
+          title="Click to simulate xEMU Voice Radio Command"
         >
           <Mic className={`w-3.5 h-3.5 ${voiceQueryStatus === 'listening' ? 'text-sky-300 animate-ping' : 'text-sky-400'}`} />
           <span>
@@ -341,36 +419,9 @@ export const HelmetVisorOverlay: React.FC<HelmetVisorOverlayProps> = ({
               ? 'VOICE RECOGNIZING... ("Nav to Kodiak")'
               : voiceQueryStatus === 'acknowledged'
               ? 'EVA COMM: COURSE PLOTTED TO TARGET'
-              : 'VOICE: "Nav to Kodiak" · "Abort EVA"'}
+              : 'VOICE COMM: "Nav to Kodiak" · "Abort EVA"'}
           </span>
         </button>
-
-        <div className="flex items-center gap-2">
-          {onSwitchToTablet && (
-            <button
-              onClick={() => {
-                tacticalAudio.playBlip();
-                onSwitchToTablet();
-              }}
-              className="px-3.5 py-2 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-            >
-              <Tablet className="w-3.5 h-3.5" />
-              <span>Tablet Mode</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => {
-              tacticalAudio.playBlip();
-              if (onSwitchToScreen) onSwitchToScreen();
-              else onExitVisor();
-            }}
-            className="apple-btn-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition"
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span>Console Screen</span>
-          </button>
-        </div>
       </div>
     </div>
   );
